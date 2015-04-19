@@ -2,7 +2,7 @@
 
 #http://www.pythoncentral.io/introduction-to-sqlite-in-python/
 #I like the idea of these sqllite tables to store data
-
+'''
 import json
 import yaml #same: pip install pyyaml
 import requests #if this doesnt work, try: pip install requests
@@ -10,6 +10,8 @@ import pprint
 import numpy as np
 import math
 from bs4 import BeautifulSoup #also: pip install beautifulsoup4
+'''
+from nyt_urls import *
 
 
 #For the community API
@@ -23,10 +25,12 @@ def main():
     #Another scraping tool/function?
     #We could sort them into editorials/authors/sections of the paper
 
-    urls = ["http://www.nytimes.com/2015/04/17/opinion/help-for-victims-of-crooked-schools.html", "http://www.nytimes.com/2015/04/17/opinion/david-brooks-when-cultures-shift.html"]
-    #instead I want to load pickle file
-    #and get all URLS
-
+    #This was just for testing
+    #urls = ["http://www.nytimes.com/2015/04/17/opinion/help-for-victims-of-crooked-schools.html", "http://www.nytimes.com/2015/04/17/opinion/david-brooks-when-cultures-shift.html"]
+    
+    articles = pickle.load( open("articles.p", 'rb'))
+    urls = [article.url for article in articles]
+    print "There are ", len(urls), " articles/urls"
 
     #{url : {[comment1, comment2, comment3...], url: [comment1, comment2, comment3...], 3 : [...], ....}
     article_comments_dict = {}
@@ -36,6 +40,7 @@ def main():
         article_comments_dict[url] = comments
         #Add Data to Datastructure/SQL Table/Whatever..
         #add_data(comments, url)
+
 
 
 #create one giant json thing with all of that articles data?
