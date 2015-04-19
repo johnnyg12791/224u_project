@@ -12,20 +12,27 @@ import math
 from bs4 import BeautifulSoup #also: pip install beautifulsoup4
 
 
+#For the community API
 #API_KEY = 3abe3be579e0b85dac546964182f1dd7:17:15145567
 PRE_URL = "http://api.nytimes.com/svc/community/v3/user-content/url.json?api-key=3abe3be579e0b85dac546964182f1dd7:17:15145567&url="
+
+#
 
 def main():
     #We will need to do some work to compile a list of these
     #Another scraping tool/function?
     #We could sort them into editorials/authors/sections of the paper
+
     urls = ["http://www.nytimes.com/2015/04/17/opinion/help-for-victims-of-crooked-schools.html", "http://www.nytimes.com/2015/04/17/opinion/david-brooks-when-cultures-shift.html"]
+    #instead I want to load pickle file
+    #and get all URLS
+
 
     #{url : {[comment1, comment2, comment3...], url: [comment1, comment2, comment3...], 3 : [...], ....}
     article_comments_dict = {}
     for url in urls:
         #Get a list of all json object comments
-        comments = get_json(url)
+        comments = get_comments_from_json(url)
         article_comments_dict[url] = comments
         #Add Data to Datastructure/SQL Table/Whatever..
         #add_data(comments, url)
@@ -34,7 +41,7 @@ def main():
 #create one giant json thing with all of that articles data?
 #The issue is that there is only 25 comments per request, so we need multiple with changes of the offset
 #or just get each json and store it immediately in our SQL table
-def get_json(url):
+def get_comments_from_json(url):
     response = requests.get(PRE_URL + url)
     data = json.loads(response.text)
     num_pages = int(math.ceil(data[u'results'][u'totalParentCommentsFound']/25.0))
