@@ -7,24 +7,25 @@ import numpy as np
 import math
 from bs4 import BeautifulSoup #also: pip install beautifulsoup4
 import pickle
+import sqlite3
 
 #This returns a list of urls to different NYT articles
 #We will keep track of the URL, Author, Section, Date
 
 
-#Most popular api key
-#API_KEY = e548999ea9b04cf78d32d9359d1f03a5:15:15145567
-
 def main():
     #Use api to get json objects
-    article_list = []
+    #Most popular api keys: (eventually, cycle through each API key for each call)
+    API_KEYS = ["e548999ea9b04cf78d32d9359d1f03a5:15:15145567"]
     URL = "http://api.nytimes.com/svc/mostpopular/v2/mostemailed/all-sections/30?api-key=e548999ea9b04cf78d32d9359d1f03a5:15:15145567"
     response = requests.get(URL)
 
     #Create Article objects from that
     data = json.loads(response.text)
+    articles_processed = 0
     for item in data[u'results']:
-        article_list.append(Article(item))
+        process_article(Article(item))
+        articles_processed += 1
 
     num_results = data[u'num_results']
     #Cycle through all pages, getting the 
@@ -34,12 +35,38 @@ def main():
         response = requests.get(URL + "&offset=" + offset)
         data = json.loads(response.text)
         for item in data[u'results']:
-            article_list.append(Article(item))       
-        print len(article_list), " out of ", num_results
-    #Add them all to a list, then pickle
-    pickle.dump(article_list, open( "articles.p", "wb" ) )
+            process_article(Article(item))
+            articles_processed += 1
+        print "Processed %d articles out of %d" % (articles_processed, num_results)
+
+#Function: process_article
+#This function first checks to see if the article is in the
+#database. Iff the article is not in the database, it adds the
+#article into the database, marking its comments as yet-to-be scraped
+def process_article(article):
+    #Avoid adding repeated articles to DB:
+    if not database_contains_article(article.url):
+        put_article_database(article)
 
 
+# Function: database_contains_article
+# Boolean-returning function that returns true iff the database contains
+# the specified article URL (in "Articles" table)
+def database_contains_article(url):
+    command = "SELECT * FROM Articles WHERE URL = (?)"
+    db_cursor.execute(command, (url,))
+    if db_cursor.fetchone() == None:
+        return False
+    return True 
+
+#Function: put_article_database
+#Adds the selected article to the Articles table in the database
+def put_article_database(article):
+    command = "INSERT into Articles (URL, Author, Title, Section, CommentsAdded) VALUES (?, ?, ?, ?, ?)"
+    db_cursor.execute(command, (article.url, article.author, article.title, article.section, False))
+
+#Class: Article
+#Provides wrapper for fields present in articles returned by NYtimes "popular" api
 class Article:
     author = ""
     url = ""
@@ -62,14 +89,28 @@ class Article:
         print "Appeared on ", self.date, "in the ", self.section, " section"
         print "URL = ", self.url
 
-
-if __name__ == "__main__":
-    main()
-
-
 #This prints a list of all NYT sections, if you ever want that
 def print_all_sections():
     response = requests.get("http://api.nytimes.com/svc/mostpopular/v2/mostemailed/sections-list?api-key=e548999ea9b04cf78d32d9359d1f03a5:15:15145567")
     data = json.loads(response.text)
     for result in data[u'results']:
         print str(result[u'name'])
+
+
+#Open database and access cursor:
+comments_db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/nyt_comments.db")
+db_cursor = comments_db.cursor()
+
+if __name__ == "__main__":
+    #Run main method:
+    main()
+
+#Close database and cursor:
+comments_db.commit()
+db_cursor.close()
+comments_db.close()
+
+
+
+
+
