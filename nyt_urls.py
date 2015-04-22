@@ -19,7 +19,7 @@ def main():
     API_KEYS = ["e548999ea9b04cf78d32d9359d1f03a5:15:15145567"]
     #this number 30 can be changed to 1 in order to 
     URL = "http://api.nytimes.com/svc/mostpopular/v2/mostemailed/all-sections/1?api-key=e548999ea9b04cf78d32d9359d1f03a5:15:15145567"
-    response = requests.get(URL)
+    response = requests.get(URL)    
 
     #Create Article objects from that
     data = json.loads(response.text)
