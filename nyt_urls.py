@@ -24,8 +24,9 @@ def main():
     #Create Article objects from that
     data = json.loads(response.text)
     articles_processed = 0
+    new_articles_added = 0
     for item in data[u'results']:
-        process_article(Article(item))
+        new_articles_added += process_article(Article(item))
         articles_processed += 1
 
     num_results = data[u'num_results']
@@ -36,9 +37,10 @@ def main():
         response = requests.get(URL + "&offset=" + offset)
         data = json.loads(response.text)
         for item in data[u'results']:
-            process_article(Article(item))
+            new_articles_added +=  process_article(Article(item))
             articles_processed += 1
         print "Processed %d articles out of %d" % (articles_processed, num_results)
+        print "%d New Articles Added" % (new_articles_added)
 
 #Function: process_article
 #This function first checks to see if the article is in the
@@ -48,6 +50,8 @@ def process_article(article):
     #Avoid adding repeated articles to DB:
     if not database_contains_article(article.url):
         put_article_database(article)
+        return 1
+    return 0
 
 
 # Function: database_contains_article
