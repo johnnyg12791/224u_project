@@ -15,17 +15,21 @@ import sqlite3
 #We will keep track of the URL, Author, Section, Date
 db = 0
 def main():
-    #Type 1 if you want to use the DB, 0 for testing purposes
-    db = int(sys.argv[1])
+    db = int(sys.argv[1]) #1 if you want to use the DB, 0 for testing purposes
+
     if(db):
         #Open database and access cursor:
         comments_db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/nyt_comments.db")
         db_cursor = comments_db.cursor()
-
-    #add_most_viewed_articles()
-
-    term = "obama"
-    add_articles_by_term(term)
+    
+    #If you just pass in the DB flag, runs most viewed article script
+    if(len(sys.argv) == 2):
+        add_most_viewed_articles()
+    
+    #You can also pass in a search term, to run the article search script
+    else:
+        term = sys.argv[2]
+        add_articles_by_term(term)
 
 
     if(db):
@@ -41,7 +45,7 @@ def add_articles_by_term(term):
     begin = "http://api.nytimes.com/svc/search/v2/articlesearch.json?q=" + term + "&fq=source:(\"The%20New%20York%20Times\")&begin_date="
     end = "&sort=oldest&api-key=eb94970b5aef4d0e8664c8c8c26da4fe:4:15145567"
 
-    page = 0
+    new_articles_added = 0
     #Can change this start date
     search_date = datetime.date(2013, 1, 1)
     all_urls = []
@@ -56,9 +60,9 @@ def add_articles_by_term(term):
             #go through the data, setting up our article information
             for item in data[u'response'][u'docs']:
                 if(db):
-                    #Still need to implement this
-                    pass
+                    new_articles_added += process_article(Article(item, most_viewed=False))
                 else:
+                    #Article(item, most_viewed=False).displayArticle()
                     url = item[u'web_url']
                     if(url not in all_urls):
                         all_urls.append(url)
@@ -66,7 +70,7 @@ def add_articles_by_term(term):
         search_date += datetime.timedelta(days=1)
         print "You are at day ", search_date
         if(db):
-            print "X new articles added to database"
+            print "%d new articles added to database" % (new_articles_added)
         else:
             print "You've found %d new urls" % (len(all_urls))
 
@@ -163,7 +167,14 @@ class Article:
             self.date = data[u'published_date']
             self.title = data[u'title']
         else: #We are getting this from the article search API
-            pass
+            print data
+            if(data[u'byline'] != [] and data[u'byline'] != None):
+                self.author = data[u'byline'][u'original'][3:]
+            self.url = data[u'web_url']
+            self.section = data[u'section_name']
+            self.date = data[u'pub_date']
+            self.title = data[u'headline'][u'main']#[u'print_headline']
+            #raw_input("")
 
     def displayArticle(self):
         print self.title, " by ", self.author
