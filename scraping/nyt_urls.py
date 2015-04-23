@@ -1,47 +1,119 @@
 #nyt_urls.py
+import sys
 import json
 import yaml #same: pip install pyyaml
 import requests #if this doesnt work, try: pip install requests
 import pprint
 import numpy as np
 import math
+import datetime
 from bs4 import BeautifulSoup #also: pip install beautifulsoup4
 import pickle
 import sqlite3
 
 #This returns a list of urls to different NYT articles
 #We will keep track of the URL, Author, Section, Date
-
-
+db = 0
 def main():
-    print "TEST!"
-    #Use api to get json objects
-    #Most popular api keys: (eventually, cycle through each API key for each call)
-    API_KEYS = ["e548999ea9b04cf78d32d9359d1f03a5:15:15145567"]
-    #this number 30 can be changed to 1 in order to 
-    URL = "http://api.nytimes.com/svc/mostviewed/v2/mostemailed/all-sections/1?api-key=e548999ea9b04cf78d32d9359d1f03a5:15:15145567"
-    response = requests.get(URL)    
+    #Type 1 if you want to use the DB, 0 for testing purposes
+    db = int(sys.argv[1])
+    if(db):
+        #Open database and access cursor:
+        comments_db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/nyt_comments.db")
+        db_cursor = comments_db.cursor()
 
-    #Create Article objects from that
-    data = json.loads(response.text)
-    articles_processed = 0
-    new_articles_added = 0
-    for item in data[u'results']:
-        new_articles_added += process_article(Article(item))
-        articles_processed += 1
+    #add_most_viewed_articles()
 
-    num_results = data[u'num_results']
-    #Cycle through all pages, getting the 
-    num_pages = int(math.ceil(num_results/20.0))
-    for i in range(num_pages):
-        offset = str(20*(i+1))
-        response = requests.get(URL + "&offset=" + offset)
-        data = json.loads(response.text)
-        for item in data[u'results']:
-            new_articles_added +=  process_article(Article(item))
-            articles_processed += 1
-        print "Processed %d articles out of %d" % (articles_processed, num_results)
-        print "%d New Articles Added" % (new_articles_added)
+    term = "obama"
+    add_articles_by_term(term)
+
+
+    if(db):
+        #Close database and cursor:
+        comments_db.commit()
+        db_cursor.close()
+        comments_db.close()
+
+
+#This takes a search term (ie, "obama", "economics", "sports")
+#And uses a very similar process as add_most_viewed articles to adding to database
+def add_articles_by_term(term):
+    begin = "http://api.nytimes.com/svc/search/v2/articlesearch.json?q=" + term + "&fq=source:(\"The%20New%20York%20Times\")&begin_date="
+    end = "&sort=oldest&api-key=eb94970b5aef4d0e8664c8c8c26da4fe:4:15145567"
+
+    page = 0
+    #Can change this start date
+    search_date = datetime.date(2013, 1, 1)
+    all_urls = []
+    while(search_date < datetime.date.today()):#Go until april 1st
+        for page in range(3): #Assume at most 3 pages (30 articles) a day for a given search term..?
+            #This is to reformat 2013-01-01 as 20130101
+            date = str(search_date)[:4] + str(search_date)[5:7] + str(search_date)[8:10]
+            #Then we put together the query and get the json data
+            query = begin + date + "&page=" + str(page) + end
+            response = requests.get(query)
+            data = json.loads(response.text)
+            #go through the data, setting up our article information
+            for item in data[u'response'][u'docs']:
+                if(db):
+                    #Still need to implement this
+                    pass
+                else:
+                    url = item[u'web_url']
+                    if(url not in all_urls):
+                        all_urls.append(url)
+            page += 1
+        search_date += datetime.timedelta(days=1)
+        print "You are at day ", search_date
+        if(db):
+            print "X new articles added to database"
+        else:
+            print "You've found %d new urls" % (len(all_urls))
+
+
+#This was the foundation of what we had earlier
+#Gets a list of urls (not including offsets) to start from
+#Then cycles through all pages of that response
+#Adding each article, first by processing to an object, the into sqlite
+#Basic tracking progress is included as well
+def add_most_viewed_articles():
+    articles_per_page = 20
+    urls = create_different_urls()
+    for url in urls:
+        print url
+        data = json.loads((requests.get(url)).text)
+        new_articles_added = 0
+        num_pages = int(math.ceil(data[u'num_results']/float(articles_per_page)))
+        for page in range(num_pages):
+            offset = str(articles_per_page*(page))
+            response = requests.get(url + "&offset=" + offset)
+            data = json.loads(response.text)
+            for item in data[u'results']:
+                if(db):
+                    new_articles_added += process_article(Article(item))
+                else:
+                    Article(item).displayArticle()
+            print "Processed %d articles out of %d" % (page*articles_per_page, num_pages*articles_per_page)
+            print "%d New Articles Added To Database" % (new_articles_added)
+
+
+
+#This creates all the different sharetype-date-section combinations for the base URL
+#Can rotate here between 3 different API KEYS
+def create_different_urls():
+    to_start_urls = []
+    beg = "http://api.nytimes.com/svc/mostpopular/v2/"
+    middle = "/all-sections/"
+    end = "?api-key=e548999ea9b04cf78d32d9359d1f03a5:15:15145567"
+
+    share_types = ["mostemailed", "mostviewed", "mostpopular"]
+    time_periods = [1, 7, 30]
+    for most_what in share_types:
+        for num_days in time_periods:
+            url = beg + most_what + middle + str(num_days) + end
+            to_start_urls.append(url)
+    #print to_start_urls
+    return to_start_urls
 
 
 #Function: process_article
@@ -81,15 +153,17 @@ class Article:
     date = ""
     title = ""
 
-    def __init__(self, data):
+    def __init__(self, data, most_viewed=True):
         #Takes the json data for a given article
         #Sets the author, url, section, and date fields    
-        self.author = data[u'byline'][3:]#Remove the "By " from byline
-        self.url = data[u'url']
-        self.section = data[u'section']
-        self.date = data[u'published_date']
-        self.title = data[u'title']
-
+        if(most_viewed):
+            self.author = data[u'byline'][3:]#Remove the "By " from byline
+            self.url = data[u'url']
+            self.section = data[u'section']
+            self.date = data[u'published_date']
+            self.title = data[u'title']
+        else: #We are getting this from the article search API
+            pass
 
     def displayArticle(self):
         print self.title, " by ", self.author
@@ -104,18 +178,11 @@ def print_all_sections():
         print str(result[u'name'])
 
 
-#Open database and access cursor:
-comments_db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/nyt_comments.db")
-db_cursor = comments_db.cursor()
+
 
 if __name__ == "__main__":
     #Run main method:
     main()
-
-#Close database and cursor:
-comments_db.commit()
-db_cursor.close()
-comments_db.close()
 
 
 

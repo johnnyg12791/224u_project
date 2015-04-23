@@ -11,6 +11,8 @@ def main():
     term = sys.argv[1]
     begin = "http://api.nytimes.com/svc/search/v2/articlesearch.json?q=" + term + "&fq=source:(\"The%20New%20York%20Times\")&begin_date="
     end = "&sort=oldest&api-key=eb94970b5aef4d0e8664c8c8c26da4fe:4:15145567"
+
+    all_urls = urls_from_search()
     page = 0
     num_pages = 0
     date = 20130101
@@ -23,7 +25,11 @@ def main():
             if(num_pages == 0):
                 num_pages = data[u'response'][u'meta'][u'hits']/10
             for item in data[u'response'][u'docs']:
-                url = item[u'web_url']
+                #url = item[u'web_url']
+                #
+
+
+
                 if(url not in all_urls):
                     all_urls.append(url)
             page += 1
@@ -38,6 +44,8 @@ def main():
             date = 20150101
         print date
     
+
+
 
     output_file = open("url_list_" + term + ".txt", 'wb')
     for url in all_urls:
