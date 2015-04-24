@@ -17,8 +17,9 @@ from nyt_urls import *
 
 #For the community API=
 #API_KEY = 3abe3be579e0b85dac546964182f1dd7:17:15145567
+#Marks API Key e7c94a47f04362f395038e2126907219:12:71919922
 #TODO: modify so cycle through API keys
-PRE_URL = "http://api.nytimes.com/svc/community/v3/user-content/url.json?api-key=3abe3be579e0b85dac546964182f1dd7:17:15145567&url="
+PRE_URL = "http://api.nytimes.com/svc/community/v3/user-content/url.json?api-key=e7c94a47f04362f395038e2126907219:12:71919922&url="
 #
 
 def main():
@@ -31,7 +32,7 @@ def main():
         process_article_comments(article_url)
         #Mark article as processed:
         mark_article_processed(article_url)
-        print "Done processing url %s" %article_url
+        print "Done processing url %s" % article_url
 
 #Function: process_article_comments
 #Method to scrape all of the comments from the community API associated
