@@ -11,10 +11,11 @@ from bs4 import BeautifulSoup #also: pip install beautifulsoup4
 import pickle
 import sqlite3
 
+db_cursor = None
 #This returns a list of urls to different NYT articles
 #We will keep track of the URL, Author, Section, Date
-db = 0
 def main():
+    global db_cursor
     db = int(sys.argv[1]) #1 if you want to use the DB, 0 for testing purposes
 
     if(db):
@@ -24,12 +25,12 @@ def main():
     
     #If you just pass in the DB flag, runs most viewed article script
     if(len(sys.argv) == 2):
-        add_most_viewed_articles()
+        add_most_viewed_articles(db)
     
     #You can also pass in a search term, to run the article search script
     else:
         term = sys.argv[2]
-        add_articles_by_term(term)
+        add_articles_by_term(db, term)
 
 
     if(db):
@@ -41,7 +42,7 @@ def main():
 
 #This takes a search term (ie, "obama", "economics", "sports")
 #And uses a very similar process as add_most_viewed articles to adding to database
-def add_articles_by_term(term):
+def add_articles_by_term(db, term):
     begin = "http://api.nytimes.com/svc/search/v2/articlesearch.json?q=" + term + "&fq=source:(\"The%20New%20York%20Times\")&begin_date="
     end = "&sort=oldest&api-key=eb94970b5aef4d0e8664c8c8c26da4fe:4:15145567"
 
@@ -80,7 +81,7 @@ def add_articles_by_term(term):
 #Then cycles through all pages of that response
 #Adding each article, first by processing to an object, the into sqlite
 #Basic tracking progress is included as well
-def add_most_viewed_articles():
+def add_most_viewed_articles(db):
     articles_per_page = 20
     urls = create_different_urls()
     for url in urls:
@@ -110,8 +111,8 @@ def create_different_urls():
     middle = "/all-sections/"
     end = "?api-key=e548999ea9b04cf78d32d9359d1f03a5:15:15145567"
 
-    share_types = ["mostemailed", "mostviewed", "mostpopular"]
-    time_periods = [1, 7, 30]
+    share_types = ["mostviewed"]#["mostemailed", "mostviewed", "mostpopular"]
+    time_periods = [7] #[1, 7, 30]
     for most_what in share_types:
         for num_days in time_periods:
             url = beg + most_what + middle + str(num_days) + end
@@ -136,6 +137,7 @@ def process_article(article):
 # Boolean-returning function that returns true iff the database contains
 # the specified article URL (in "Articles" table)
 def database_contains_article(url):
+    global db_cursor
     command = "SELECT * FROM Articles WHERE URL = (?)"
     db_cursor.execute(command, (url,))
     if db_cursor.fetchone() == None:
@@ -145,6 +147,7 @@ def database_contains_article(url):
 #Function: put_article_database
 #Adds the selected article to the Articles table in the database
 def put_article_database(article):
+    global db_cursor
     command = "INSERT into Articles (URL, Author, Title, Section, CommentsAdded) VALUES (?, ?, ?, ?, ?)"
     db_cursor.execute(command, (article.url, article.author, article.title, article.section, False))
 
@@ -167,7 +170,6 @@ class Article:
             self.date = data[u'published_date']
             self.title = data[u'title']
         else: #We are getting this from the article search API
-            print data
             if(data[u'byline'] != [] and data[u'byline'] != None):
                 self.author = data[u'byline'][u'original'][3:]
             self.url = data[u'web_url']
