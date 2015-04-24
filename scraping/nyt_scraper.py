@@ -23,15 +23,17 @@ PRE_URL = "http://api.nytimes.com/svc/community/v3/user-content/url.json?api-key
 
 def main():
     ##Pull unprocessed articles from DB:
+    num_articles = db_article_cursor.execute("SELECT COUNT(*) FROM Articles WHERE CommentsAdded = 0").fetchone()[0]
     unprocessedArticlesCommand = "SELECT URL FROM Articles WHERE CommentsAdded = 0"
-    for url in db_article_cursor.execute(unprocessedArticlesCommand):
-        print "next article:"
+    all_urls = db_article_cursor.execute(unprocessedArticlesCommand)
+    for index, url in enumerate(all_urls):
+        #print "next article:"
         article_url = url[0] #So that it isn't treated as a tuple
         #Process article:
         process_article_comments(article_url)
         #Mark article as processed:
         mark_article_processed(article_url)
-        print "Done processing url %s" %article_url
+        print "Done processing url %d of %d" % (index, num_articles)
 
 #Function: process_article_comments
 #Method to scrape all of the comments from the community API associated
@@ -70,7 +72,7 @@ def get_comments_from_json(url):
         data = json.loads(response.text)
         #pprint.pprint(data)
         all_comments.extend(data[u'results'][u'comments'])
-    print "url: ", url, " has ", str(len(all_comments)), " comments"
+    #print "url: ", url, " has ", str(len(all_comments)), " comments"
     return all_comments
 
 
@@ -78,7 +80,7 @@ def get_comments_from_json(url):
 #Function: add_comments_to_db
 #Add information about comment to database
 def add_comments_to_db(comments, article_url):
-    print "Adding data associated with %s" %article_url
+    #print "Adding data associated with %s" %article_url
     for c in comments:
         #Setup of comment in DB:
         #(CommentID integer PRIMARY KEY, ArticleURL text, RecommendedFlag integer, 
