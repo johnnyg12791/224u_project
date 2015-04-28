@@ -17,10 +17,10 @@ from nyt_urls import *
 
 
 #For the community API=
-#API_KEY = 3abe3be579e0b85dac546964182f1dd7:17:15145567
+#Johns API_KEY=3abe3be579e0b85dac546964182f1dd7:17:15145567
 #Marks API KEY=e7c94a47f04362f395038e2126907219:12:71919922
 #TODO: modify so cycle through API keys
-PRE_URL = "http://api.nytimes.com/svc/community/v3/user-content/url.json?api-key=3abe3be579e0b85dac546964182f1dd7:17:15145567&url="
+PRE_URL = "http://api.nytimes.com/svc/community/v3/user-content/url.json?api-key=e7c94a47f04362f395038e2126907219:12:71919922&url="
 #
 
 def main():
@@ -102,9 +102,6 @@ def add_comments_to_db(comments, article_url):
         db_cursor.execute(command, values)
 
 
-
-
-
 #Open database and access cursor:
 comments_db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/nyt_comments.db")
 db_article_cursor = comments_db.cursor() #Cursor to keep track of article query results
@@ -119,8 +116,4 @@ db_comments_added.close()
 db_cursor.close()
 db_article_cursor.close()
 comments_db.close()
-
-
-
-
 
