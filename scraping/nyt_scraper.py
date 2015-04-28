@@ -11,6 +11,7 @@ import numpy as np
 import math
 from bs4 import BeautifulSoup #also: pip install beautifulsoup4
 '''
+import time
 import sqlite3
 from nyt_urls import *
 
@@ -19,7 +20,7 @@ from nyt_urls import *
 #API_KEY = 3abe3be579e0b85dac546964182f1dd7:17:15145567
 #Marks API KEY=e7c94a47f04362f395038e2126907219:12:71919922
 #TODO: modify so cycle through API keys
-PRE_URL = "http://api.nytimes.com/svc/community/v3/user-content/url.json?api-key=e7c94a47f04362f395038e2126907219:12:71919922&url="
+PRE_URL = "http://api.nytimes.com/svc/community/v3/user-content/url.json?api-key=3abe3be579e0b85dac546964182f1dd7:17:15145567&url="
 #
 
 def main():
@@ -71,7 +72,8 @@ def get_comments_from_json(url):
     all_comments.extend(data[u'results'][u'comments'])
 
     for i in range(num_pages):
-        offset = str(25 * (i+1))
+	time.sleep(.1)#Slow down for rate limiting
+	offset = str(25 * (i+1))
         response = requests.get(PRE_URL + url + "&offset=" + offset)
         data = json.loads(response.text)
         #pprint.pprint(data)
@@ -91,7 +93,9 @@ def add_comments_to_db(comments, article_url):
         #NumReplies integer, Trusted integer, UserDisplayName text, CreateDate integer, 
         #UserID integer, CommentTitle text, Sharing integer, NumRecommendations integer, 
         #EditorSelection boolean, Timespeople integer, CommentText text)
-        command = "INSERT INTO Comments VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        #print c["commentID"]
+	#print c["commentBody"].encode("utf-8")
+	command = "INSERT OR IGNORE INTO Comments VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         values = (c["commentID"], article_url, c["recommendedFlag"], c["replyCount"], c["trusted"],
             c["userDisplayName"], c["createDate"], c["userID"], c["commentTitle"],
             c["sharing"], c["recommendations"], c["editorsSelection"], c["timespeople"], c["commentBody"])
