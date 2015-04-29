@@ -96,8 +96,9 @@ def add_comments_to_db(comments, article_url):
         #print c["commentID"]
 	#print c["commentBody"].encode("utf-8")
 	command = "INSERT OR IGNORE INTO Comments VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        values = (c["commentID"], article_url, c["recommendedFlag"], c["replyCount"], c["trusted"],
-            c["userDisplayName"], c["createDate"], c["userID"], c["commentTitle"],
+        print c["commentID"], article_url, c.get("recommendedFlag", 0), c["replyCount"], c["trusted"], c["userDisplayName"], c["createDate"], c["userID"], c.get("commentTitle", "No Comment Title"), c.get("sharing", "No Sharing"), c["recommendations"], c["editorsSelection"], c["timespeople"], c["commentBody"] 
+	values = (c["commentID"], article_url, c.get("recommendedFlag", 0), c["replyCount"], c["trusted"],
+            c["userDisplayName"], c["createDate"], c["userID"], c.get("commentTitle", ""),
             c["sharing"], c["recommendations"], c["editorsSelection"], c["timespeople"], c["commentBody"])
         db_cursor.execute(command, values)
 
