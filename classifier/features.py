@@ -1,28 +1,29 @@
-# Borrowed some from https://github.com/markulrich/chambot/blob/master/config/features.py
 import string
-from textblob import TextBlob
+# import nltk
+# from textblob import TextBlob
 from collections import Counter
 
-class UnaryFeatures:
-    def __init__(self, text):
-        self.text = text
+class Features:
+    MAX_CHARS_PER_WORD = 10
 
-    def avg_word_len(self):
-        words = self.text.split()
-        return sum(len(w) for w in words) / len(words)
+    @staticmethod
+    def len_feats(text):
+        MAX_CHARS_PER_WORD = 10
+        words = text.split()
+        feats = {
+            'n_chars': len(text),
+            'n_words': len(words),
+            'n_periods': sum(1 for c in text if c == '.'),
+            'n_questions': sum(1 for c in text if c == '?')
+        }
+        for i in range(1, MAX_CHARS_PER_WORD + 1):
+            feats['n_' + str(i) + '_char_words'] = sum(1 for w in words if len(w) == i)
+        return feats
 
-    def total_len(self):
-        return len(self.text)
-
-
-class BinaryFeatures:
-    def __init__(self, textA, textB):
-        self.textA = textA
-        self.textB = textB
-
-    def similarity_word_feature(self):
-        splitA = self.textA.split()
-        splitB = self.textB.split()
+    @staticmethod
+    def similarity_word_feature(textA, textB):
+        splitA = textA.split()
+        splitB = textB.split()
         num_same_words = len(set(splitA).intersection(set(splitB)))
         num_total_words = len(set(splitA + splitB))
         return float(num_same_words) / num_total_words
