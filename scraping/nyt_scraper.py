@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup #also: pip install beautifulsoup4
 '''
 import time
 import sqlite3
+import random 
 from nyt_urls import *
 
 
@@ -21,6 +22,8 @@ from nyt_urls import *
 #Marks API KEY=e7c94a47f04362f395038e2126907219:12:71919922
 #TODO: modify so cycle through API keys
 PRE_URL = "http://api.nytimes.com/svc/community/v3/user-content/url.json?api-key=e7c94a47f04362f395038e2126907219:12:71919922&url="
+num_to_scrape = 10000
+num_scraped_sofar = 0
 #
 
 def main():
@@ -38,7 +41,11 @@ def main():
             #Mark article as processed:
             mark_article_processed(article_url)
             urls_used.append(article_url)
-            print "Done processing url %d of %d" % (index, num_articles)
+            print "Done processing url %d of %d" % (index, num_to_scrape)
+            if index > num_to_scrape: 
+                print "Done scraping"
+                break
+
 
 #Function: process_article_comments
 #Method to scrape all of the comments from the community API associated
@@ -46,10 +53,12 @@ def main():
 def process_article_comments(article_url):
     #Get a list of all json object comments for this URL:
     comments = get_comments_from_json(article_url)
-    print "Url %s has %d comments" %(article_url, len(comments))
+    #print "Url %s has %d comments" %(article_url, len(comments))
     if len(comments) > 0:
         #If article has comments, add them to DB
         add_comments_to_db(comments, article_url)
+        global num_scraped_sofar
+        num_scraped_sofar += 1
 
 #Function: mark_article_processsed
 #SQL call with the inner (comments) cursor to mark the given articleURL (key)
@@ -63,11 +72,14 @@ def mark_article_processed(article_url):
 #or just get each json and store it immediately in our SQL table
 def get_comments_from_json(url):
     response = requests.get(PRE_URL + url)
-    data = json.loads(response.text)
+    try:
+        data = json.loads(response.text)
+    except:
+        print "Could not load one json"
+        return []
     num_pages = int(math.ceil(data[u'results'][u'totalParentCommentsFound']/25.0))
     #Total parent comments is what we want to cycle through pages/offset, but some comments are "replies"
     #So there is a nested/tree like structure for those, but I'm not sure if any are "top picks"
-
     all_comments = []
     all_comments.extend(data[u'results'][u'comments'])
 
@@ -76,12 +88,18 @@ def get_comments_from_json(url):
 	offset = str(25 * (i+1))
         response = requests.get(PRE_URL + url + "&offset=" + offset)
         data = json.loads(response.text)
-        #pprint.pprint(data)
         all_comments.extend(data[u'results'][u'comments'])
-    #print "url: ", url, " has ", str(len(all_comments)), " comments"
     return all_comments
 
-
+#Splits dataset into 70/20/10 train/dev/test
+#Where 1 = train, 2 = dev, 3 = test
+def train_dev_test():
+    classification = random.random()
+    if classification < .7:
+        return 1
+    if classification < .9:
+        return 2
+    return 3
 
 #Function: add_comments_to_db
 #Add information about comment to database
@@ -94,13 +112,13 @@ def add_comments_to_db(comments, article_url):
         #UserID integer, CommentTitle text, Sharing integer, NumRecommendations integer, 
         #EditorSelection boolean, Timespeople integer, CommentText text)
         #print c["commentID"]
-	#print c["commentBody"].encode("utf-8")
-	command = "INSERT OR IGNORE INTO Comments VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        print c["commentID"], article_url, c.get("recommendedFlag", 0), c["replyCount"], c["trusted"], c["userDisplayName"], c["createDate"], c["userID"], c.get("commentTitle", "No Comment Title"), c.get("sharing", "No Sharing"), c["recommendations"], c["editorsSelection"], c["timespeople"], c["commentBody"] 
-	values = (c["commentID"], article_url, c.get("recommendedFlag", 0), c["replyCount"], c["trusted"],
-            c["userDisplayName"], c["createDate"], c["userID"], c.get("commentTitle", ""),
-            c["sharing"], c["recommendations"], c["editorsSelection"], c["timespeople"], c["commentBody"])
+	tdt = train_dev_test()
+	command = "INSERT OR IGNORE INTO Comments VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        values = (c["commentID"], article_url, c["recommendedFlag"], c["replyCount"], c["trusted"],
+            c["userDisplayName"], c["createDate"], c["userID"], c["commentTitle"],
+            c["sharing"], c["recommendations"], c["editorsSelection"], c["timespeople"], c["commentBody"], tdt)
         db_cursor.execute(command, values)
+
 
 
 #Open database and access cursor:
