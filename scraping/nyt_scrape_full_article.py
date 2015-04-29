@@ -40,12 +40,9 @@ def save_full_article(url):
 	page = requests.get(url)
 	doc = lh.fromstring(page.content)
 	text = doc.xpath('//p[@itemprop="articleBody"]')
-	#finalText = str()
 	finalText = unicode()
 	for par in text:
-	    #finalText += par.text_content().encode("utf-8")
 	    finalText += par.text_content()
-	   # print "Now final text is %s" % finalText
 
 	exec_cursor.execute("UPDATE Articles SET AddedText=1 WHERE URL = ?", (url,))
 	exec_cursor.execute("INSERT OR IGNORE INTO ArticleText (URL, FullText) VALUES (?, ?)", (finalText, url))

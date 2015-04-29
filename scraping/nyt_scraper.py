@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup #also: pip install beautifulsoup4
 '''
 import time
 import sqlite3
+import random 
 from nyt_urls import *
 
 
@@ -81,7 +82,15 @@ def get_comments_from_json(url):
     #print "url: ", url, " has ", str(len(all_comments)), " comments"
     return all_comments
 
-
+#Splits dataset into 70/20/10 train/dev/test
+#Where 1 = train, 2 = dev, 3 = test
+def train_dev_test():
+    classification = random()
+    if classification < .7:
+        return 1
+    if classification < .9:
+        return 2
+    return 3
 
 #Function: add_comments_to_db
 #Add information about comment to database
@@ -94,7 +103,7 @@ def add_comments_to_db(comments, article_url):
         #UserID integer, CommentTitle text, Sharing integer, NumRecommendations integer, 
         #EditorSelection boolean, Timespeople integer, CommentText text)
         #print c["commentID"]
-	#print c["commentBody"].encode("utf-8")
+	tdt = train_dev_test()
 	command = "INSERT OR IGNORE INTO Comments VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         values = (c["commentID"], article_url, c["recommendedFlag"], c["replyCount"], c["trusted"],
             c["userDisplayName"], c["createDate"], c["userID"], c["commentTitle"],
