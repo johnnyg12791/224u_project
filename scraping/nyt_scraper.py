@@ -11,14 +11,16 @@ import numpy as np
 import math
 from bs4 import BeautifulSoup #also: pip install beautifulsoup4
 '''
+import time
 import sqlite3
 from nyt_urls import *
 
 
 #For the community API=
-#API_KEY = 3abe3be579e0b85dac546964182f1dd7:17:15145567
+#Johns API_KEY=3abe3be579e0b85dac546964182f1dd7:17:15145567
+#Marks API KEY=e7c94a47f04362f395038e2126907219:12:71919922
 #TODO: modify so cycle through API keys
-PRE_URL = "http://api.nytimes.com/svc/community/v3/user-content/url.json?api-key=3abe3be579e0b85dac546964182f1dd7:17:15145567&url="
+PRE_URL = "http://api.nytimes.com/svc/community/v3/user-content/url.json?api-key=e7c94a47f04362f395038e2126907219:12:71919922&url="
 #
 
 def main():
@@ -26,14 +28,17 @@ def main():
     num_articles = db_article_cursor.execute("SELECT COUNT(*) FROM Articles WHERE CommentsAdded = 0").fetchone()[0]
     unprocessedArticlesCommand = "SELECT URL FROM Articles WHERE CommentsAdded = 0"
     all_urls = db_article_cursor.execute(unprocessedArticlesCommand)
+    urls_used = []
     for index, url in enumerate(all_urls):
         #print "next article:"
         article_url = url[0] #So that it isn't treated as a tuple
         #Process article:
-        process_article_comments(article_url)
-        #Mark article as processed:
-        mark_article_processed(article_url)
-        print "Done processing url %d of %d" % (index, num_articles)
+        if(article_url not in urls_used):
+            process_article_comments(article_url)
+            #Mark article as processed:
+            mark_article_processed(article_url)
+            urls_used.append(article_url)
+            print "Done processing url %d of %d" % (index, num_articles)
 
 #Function: process_article_comments
 #Method to scrape all of the comments from the community API associated
@@ -50,8 +55,8 @@ def process_article_comments(article_url):
 #SQL call with the inner (comments) cursor to mark the given articleURL (key)
 #as being processed.
 def mark_article_processed(article_url):
-    db_cursor.execute("UPDATE Articles SET CommentsAdded=1 WHERE URL = ?", (article_url,))
-
+    db_comments_added.execute("UPDATE Articles SET CommentsAdded=1 WHERE URL = ?", (article_url,))
+    comments_db.commit()
 
 #create one giant json thing with all of that articles data?
 #The issue is that there is only 25 comments per request, so we need multiple with changes of the offset
@@ -67,7 +72,8 @@ def get_comments_from_json(url):
     all_comments.extend(data[u'results'][u'comments'])
 
     for i in range(num_pages):
-        offset = str(25 * (i+1))
+	time.sleep(.1)#Slow down for rate limiting
+	offset = str(25 * (i+1))
         response = requests.get(PRE_URL + url + "&offset=" + offset)
         data = json.loads(response.text)
         #pprint.pprint(data)
@@ -87,30 +93,27 @@ def add_comments_to_db(comments, article_url):
         #NumReplies integer, Trusted integer, UserDisplayName text, CreateDate integer, 
         #UserID integer, CommentTitle text, Sharing integer, NumRecommendations integer, 
         #EditorSelection boolean, Timespeople integer, CommentText text)
-        command = "INSERT INTO Comments VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        #print c["commentID"]
+	#print c["commentBody"].encode("utf-8")
+	command = "INSERT OR IGNORE INTO Comments VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         values = (c["commentID"], article_url, c["recommendedFlag"], c["replyCount"], c["trusted"],
             c["userDisplayName"], c["createDate"], c["userID"], c["commentTitle"],
             c["sharing"], c["recommendations"], c["editorsSelection"], c["timespeople"], c["commentBody"])
         db_cursor.execute(command, values)
 
 
-
-
-
 #Open database and access cursor:
 comments_db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/nyt_comments.db")
 db_article_cursor = comments_db.cursor() #Cursor to keep track of article query results
 db_cursor = comments_db.cursor() #Cursor to do update of comments table
+db_comments_added = comments_db.cursor()
 #Run main method:
 if __name__ == "__main__":
     main()
 #Close database and cursor:
 comments_db.commit()
+db_comments_added.close()
 db_cursor.close()
 db_article_cursor.close()
 comments_db.close()
-
-
-
-
 
