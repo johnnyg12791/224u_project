@@ -5,3 +5,4 @@ print "in"
 cf = CommentFeatures()
 cf.bagOfWords()
 print "out"
+cf.close()

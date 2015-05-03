@@ -15,6 +15,7 @@ import time
 import sqlite3
 import random 
 from nyt_urls import *
+import argparse
 
 
 #For the community API=
@@ -22,7 +23,12 @@ from nyt_urls import *
 #Marks API KEY=e7c94a47f04362f395038e2126907219:12:71919922
 #TODO: modify so cycle through API keys
 PRE_URL = "http://api.nytimes.com/svc/community/v3/user-content/url.json?api-key=e7c94a47f04362f395038e2126907219:12:71919922&url="
-num_to_scrape = 10000
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--count", help="Provide cutoff number of comments to fetch; infinity if not provided")
+args = vars(parser.parse_args())
+num_to_scrape = 5000 #Limit per API key per day
+if args["count"]:
+    num_to_scrape = int(args["count"])
 num_scraped_sofar = 0
 #
 
