@@ -44,3 +44,11 @@ class CommentFeatures():
 		self.t_x = tfidf_vectorizer.fit_transform(self.t_x)
 		print self.t_x
 
+
+
+
+
+
+
+
+
