@@ -13,8 +13,8 @@ def basic_feats(text):
             'n_upper': sum(1 for c in text if c.isupper())
         }
         feats['avg_word_len'] = feats['n_chars'] / float(feats['n_words'])
-        n_sentences = feats['n_periods'] + feats['n_questions'] + feats['n_exclamations']
-        feats['n_sentences'] = n_sentences + 1
+        n_sentences = feats['n_periods'] + feats['n_questions'] + feats['n_exclamations'] + 1
+        feats['n_sentences'] = n_sentences
         feats['avg_sentence_len'] = feats['n_chars'] / float(n_sentences)
         feats['words_per_sentence'] = feats['n_words'] / float(n_sentences)
         for i in range(1, MAX_CHARS_PER_WORD + 1):
@@ -30,7 +30,9 @@ def nltk_feats(text):
     # NLTK features
     tokens = nltk.word_tokenize(text)
     tagged = nltk.pos_tag(tokens)
-    return {}
+    feats = {k: 0 for k in POS_TREEBANK_TAGS}
+    # for key, group in
+    return feats
 
 def textblob_feats(text):
     from textblob import TextBlob
