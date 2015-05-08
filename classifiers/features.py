@@ -1,13 +1,5 @@
-import string
-# import nltk
-# from textblob import TextBlob
-from collections import Counter
-
-class Features:
-    MAX_CHARS_PER_WORD = 20
-
-    @staticmethod
-    def len_feats(text):
+def basic_feats(text):
+        # Length features
         MAX_CHARS_PER_WORD = 20
         words = text.split()
         feats = {
@@ -30,17 +22,23 @@ class Features:
             feats['perc_' + key] = n_iletter_words / feats['n_words']
         return feats
 
-    @staticmethod
-    def similarity_word_feature(textA, textB):
-        splitA = textA.split()
-        splitB = textB.split()
-        num_same_words = len(set(splitA).intersection(set(splitB)))
-        num_total_words = len(set(splitA + splitB))
-        return float(num_same_words) / num_total_words
+def nltk_feats(text):
+    import nltk
+    # NLTK features
+    tokens = nltk.word_tokenize(text)
+    # TODO
+    return {}
+
+def similarity_word_feature(textA, textB):
+    splitA = textA.split()
+    splitB = textB.split()
+    num_same_words = len(set(splitA).intersection(set(splitB)))
+    num_total_words = len(set(splitA + splitB))
+    return float(num_same_words) / num_total_words
 
 if __name__ == '__main__':
     text = 'This is my. Comment?'
-    feats = Features.len_feats(text)
+    feats = basic_feats(text)
     assert feats['n_chars'] == len(text)
     assert feats['words_per_sentence'] == 2.0
     assert feats['n_sentences'] == 2
