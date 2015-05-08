@@ -21,7 +21,7 @@ def basic_feats(text):
             key = str(i) + '_char_words'
             n_iletter_words = sum(1 for w in words if len(w) == i)
             feats['n_' + key] = n_iletter_words
-            feats['perc_' + key] = n_iletter_words / feats['n_words']
+            feats['perc_' + key] = n_iletter_words / float(feats['n_words'])
         return feats
 
 def nltk_feats(text):
@@ -31,7 +31,10 @@ def nltk_feats(text):
     tokens = nltk.word_tokenize(text)
     tagged = nltk.pos_tag(tokens)
     feats = {k: 0 for k in POS_TREEBANK_TAGS}
-    # for key, group in
+    print tagged
+    for key, group in groupby(tagged, lambda x: x[0]):
+        feats[key] = sum(1 for _ in group)
+    print feats
     return feats
 
 def textblob_feats(text):
