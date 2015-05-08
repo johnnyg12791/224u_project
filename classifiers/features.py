@@ -1,3 +1,5 @@
+from itertools import groupby
+
 def basic_feats(text):
         # Length features
         MAX_CHARS_PER_WORD = 20
@@ -12,7 +14,7 @@ def basic_feats(text):
         }
         feats['avg_word_len'] = feats['n_chars'] / float(feats['n_words'])
         n_sentences = feats['n_periods'] + feats['n_questions'] + feats['n_exclamations']
-        feats['n_sentences'] = n_sentences
+        feats['n_sentences'] = n_sentences + 1
         feats['avg_sentence_len'] = feats['n_chars'] / float(n_sentences)
         feats['words_per_sentence'] = feats['n_words'] / float(n_sentences)
         for i in range(1, MAX_CHARS_PER_WORD + 1):
@@ -24,10 +26,14 @@ def basic_feats(text):
 
 def nltk_feats(text):
     import nltk
+    POS_TREEBANK_TAGS = {'CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS', 'LS', 'MD', 'NN', 'NNS', 'NNP', 'NNPS', 'PDT', 'POS', 'PRP', 'PRP$', 'RB', 'RBR', 'RBS', 'RP', 'SYM', 'TO', 'UH', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'WDT', 'WP', 'WP$', 'WRB'}
     # NLTK features
     tokens = nltk.word_tokenize(text)
-    # TODO
+    tagged = nltk.pos_tag(tokens)
     return {}
+
+def textblob_feats(text):
+    from textblob import TextBlob
 
 def similarity_word_feature(textA, textB):
     splitA = textA.split()
