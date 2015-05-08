@@ -18,7 +18,7 @@ def get_database(test):
     return comments_db
 
 
-
+#
 def main():
     comments_db = get_database(sys.argv[1])#test or something else
     cursor = comments_db.cursor()
