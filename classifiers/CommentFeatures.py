@@ -40,12 +40,13 @@ class CommentFeatures():
 	def getReviews(self):
 		#Grab train examples, add text and "golds:"
 		num_grabbed = 0
+		#Artificially add 25% editor picks
 		for cText, aText, gold in self.c.execute (self.trainSelectQueryEditorPick):
 			self.t_x.append(cText)
 			self.t_y.append(gold)
 			num_grabbed += 1
 			if num_grabbed > self.trainCutoffNum * self.proportionEditorPicks: break
-		print "editor picks in"
+		#Add 75% non-editor picks
 		for cText, aText, gold in self.c.execute (self.trainSelectQueryNonEditorPick):
 			self.t_x.append(cText)
 			self.t_y.append(gold)
@@ -53,10 +54,12 @@ class CommentFeatures():
 			if num_grabbed > self.trainCutoffNum: break
 		#Grab dev examples, add text and "golds:"
 		num_grabbed = 0
+		#Artificially add 25% editor picks
 		for cText, aText, gold in self.c.execute (self.devSelectQueryEditorPick):
 			self.d_x.append(cText)
 			self.d_y.append(gold)
 			if num_grabbed > self.trainCutoffNum * self.proportionEditorPicks: break
+		#Add 75% non-editor picks
 		for cText, aText, gold in self.c.execute (self.devSelectQueryNonEditorPick):
 			self.d_x.append(cText)
 			self.d_y.append(gold)
@@ -69,19 +72,20 @@ class CommentFeatures():
 		self.getReviews()
 		#Choose which vectorizing schematic to use:
 		if tfidf:
-			#Vectorize BOW, append to train/dev x:
+			print "Creating features using tf-idf..."
+			#Vectorize using TF-IDF scheme:
 			tfidf_vectorizer = fe.text.TfidfVectorizer() #Set binary to true for rough estim
-			tfidf_fit = tfidf_vectorizer.fit(self.t_x + self.d_x)
+			tfidf_vectorizer.fit(self.t_x + self.d_x)
 			self.t_x = tfidf_vectorizer.transform(self.t_x)
 			self.d_x = tfidf_vectorizer.transform(self.d_x)
-			#self.t_x = tfidf_vectorizer.fit_transform(self.t_x)
-			#self.d_x = tfidf_vectorizer.fit_transform(self.d_x)
 		else:
+			print "Creating features using non-normalized bag of words..."
 			#Use a standard count-vectorizer model
 			count_vectorizer = fe.text.CountVectorizer()
-			self.t_x = count_vectorizer.fit_transform(self.t_x)
-			self.d_x = count_vectorizer.fit_transform(self.d_x)
-		print "Done setting up BOW model"
+			count_vectorizer.fit(self.t_x + self.d_x)
+			self.t_x = count_vectorizer.transform(self.t_x)
+			self.d_x = count_vectorizer.transform(self.d_x)
+
 
 ###########Set classifier type + parameters: ############################
 
