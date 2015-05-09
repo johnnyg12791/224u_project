@@ -21,7 +21,8 @@ from nyt_urls import *
 #Johns API_KEY=3abe3be579e0b85dac546964182f1dd7:17:15145567
 #Marks API KEY=e7c94a47f04362f395038e2126907219:12:71919922
 #TODO: modify so cycle through API keys
-PRE_URL = "http://api.nytimes.com/svc/community/v3/user-content/url.json?api-key=e7c94a47f04362f395038e2126907219:12:71919922&url="
+PRE_URL = "http://api.nytimes.com/svc/community/v3/user-content/url.json?api-key=3abe3be579e0b85dac546964182f1dd7:17:15145567&url="
+#PRE_URL = "http://api.nytimes.com/svc/community/v3/user-content/url.json?api-key=e7c94a47f04362f395038e2126907219:12:71919922&url="
 num_to_scrape = 10000
 num_scraped_sofar = 0
 #
@@ -37,14 +38,14 @@ def main():
         article_url = url[0] #So that it isn't treated as a tuple
         #Process article:
         if(article_url not in urls_used):
-            process_article_comments(article_url)
-            #Mark article as processed:
-            mark_article_processed(article_url)
+            if(process_article_comments(article_url)):
+                #Mark article as processed:
+                mark_article_processed(article_url)
             urls_used.append(article_url)
-            print "Done processing url %d of %d" % (index, num_to_scrape)
-            if index > num_to_scrape: 
-                print "Done scraping"
-                break
+            print "Done processing url %d of %d" % (index, num_articles)
+            #if index > num_to_scrape: 
+            #    print "Done scraping"
+            #    break
 
 
 #Function: process_article_comments
@@ -53,12 +54,15 @@ def main():
 def process_article_comments(article_url):
     #Get a list of all json object comments for this URL:
     comments = get_comments_from_json(article_url)
-    #print "Url %s has %d comments" %(article_url, len(comments))
+    if(comments == -1):
+	return 0
+    print "Url %s has %d comments" %(article_url, len(comments))
     if len(comments) > 0:
         #If article has comments, add them to DB
         add_comments_to_db(comments, article_url)
         global num_scraped_sofar
         num_scraped_sofar += 1
+    return 1
 
 #Function: mark_article_processsed
 #SQL call with the inner (comments) cursor to mark the given articleURL (key)
@@ -76,7 +80,7 @@ def get_comments_from_json(url):
         data = json.loads(response.text)
     except:
         print "Could not load one json"
-        return []
+        return -1
     num_pages = int(math.ceil(data[u'results'][u'totalParentCommentsFound']/25.0))
     #Total parent comments is what we want to cycle through pages/offset, but some comments are "replies"
     #So there is a nested/tree like structure for those, but I'm not sure if any are "top picks"
