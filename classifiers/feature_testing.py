@@ -1,7 +1,8 @@
 
 from CommentFeatures import CommentFeatures
 
-print "in"
 cf = CommentFeatures()
+cf.setLinearSVM()
 cf.bagOfWords()
-print "out"
+cf.classify()
+cf.close()

@@ -48,7 +48,7 @@ def save_full_article(url):
 	    finalText += par.text_content()
 
 	exec_cursor.execute("UPDATE Articles SET AddedText=1 WHERE URL = ?", (url,))
-	exec_cursor.execute("INSERT OR IGNORE INTO ArticleText (URL, FullText) VALUES (?, ?)", (finalText, url))
+	exec_cursor.execute("INSERT OR IGNORE INTO ArticleText (URL, FullText) VALUES (?, ?)", (url, finalText))
 
 #Open database and access cursors:
 comments_db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/nyt_comments.db")
