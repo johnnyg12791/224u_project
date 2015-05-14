@@ -1,29 +1,5 @@
 from collections import defaultdict
 
-def basic_feats(text):
-        # Length features
-        MAX_CHARS_PER_WORD = 20
-        words = text.split()
-        feats = {
-            'n_chars': len(text),
-            'n_words': len(words),
-            'n_periods': sum(1 for c in text if c == '.'),
-            'n_questions': sum(1 for c in text if c == '?'),
-            'n_exclamations': sum(1 for c in text if c == '!'),
-            'n_upper': sum(1 for c in text if c.isupper())
-        }
-        feats['avg_word_len'] = feats['n_chars'] / float(feats['n_words'])
-        n_sentences = max(feats['n_periods'] + feats['n_questions'] + feats['n_exclamations'], 1)
-        feats['n_sentences'] = n_sentences
-        feats['avg_sentence_len'] = feats['n_chars'] / float(n_sentences)
-        feats['words_per_sentence'] = feats['n_words'] / float(n_sentences)
-        for i in range(1, MAX_CHARS_PER_WORD + 1):
-            key = str(i) + '_char_words'
-            n_iletter_words = sum(1 for w in words if len(w) == i)
-            feats['n_' + key] = n_iletter_words
-            feats['perc_' + key] = n_iletter_words / float(feats['n_words'])
-        return feats
-
 def nltk_feats(text):
     import nltk
     # Penn Discourse Treebank
