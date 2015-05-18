@@ -6,9 +6,12 @@ import sys
 
 
 #
-def get_database(test):
+def get_database(arg1):
     DB_PATH = 'nyt_comments.db'
-    if(test == "test"):
+    if(arg1 == "backup"):
+	DB_PATH = "/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/backup_may8.db"
+
+    if(arg1 == "test"):
         DB_PATH = "../database/test.db"
 
     if not os.path.isfile(DB_PATH):
