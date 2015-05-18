@@ -33,13 +33,13 @@ def main():
     #For each row in the Comments Table, we want to add all features associated with that text
     comments_data = [(c_id, c_text) for (c_id, c_text) in cursor.execute("SELECT CommentID, CommentText FROM Comments")]
     for comment_id, comment_text in comments_data:
-        features = basic_feats(comment_text) #Feature dictionary based on comment text
+        features = all_comment_feats(comment_text) #Feature dictionary based on comment text
 
         for feature_name, feature_value in features.items():      
             #If that column doesn't exist, alter table by adding it
             cursor.execute("SELECT * FROM Features LIMIT 1")
             if feature_name not in {description[0] for description in cursor.description}:
-                cursor.execute("ALTER TABLE Features ADD COLUMN '%s' 'float'" % feature_name)
+                cursor.execute("ALTER TABLE Features ADD COLUMN %s REAL" % feature_name)
             
             #Now that the column exists, add specifed value
             insert_statement = ("UPDATE Features SET '%s'= %f WHERE CommentID = %d" % (feature_name, feature_value, comment_id))
