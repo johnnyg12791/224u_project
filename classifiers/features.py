@@ -1,3 +1,4 @@
+import string
 from collections import defaultdict
 
 def nltk_feats(text):
@@ -32,12 +33,15 @@ def nltk_feats(text):
     feats['starts_with_I'] = 1.0 if text[:2] == 'I ' else 0.0
 
     # Bag of parts of speech
+    '''
     tagged = nltk.pos_tag(tokens)
     feats['n_novel_tags'] = 0.0
     for word, tag in tagged:
-        if tag not in POS_TREEBANK_TAGS:
-            feats['n_novel_tags'] += 1.0
-        feats[tag] += 1.0
+        if tag in POS_TREEBANK_TAGS:
+            feats[tag] += 1.0
+	    #print tag
+    #print feats
+    '''
     return feats
 
 def textblob_feats(text):
@@ -50,9 +54,9 @@ def textblob_feats(text):
 
 def all_comment_feats(text):
     f = nltk_feats(text)
-    f2 = textblob_feats(text)
-    assert len(set(f.keys()).union(f2.keys())) == 0
-    f.update(f2)
+    #f2 = textblob_feats(text)
+    #assert len(set(f.keys()).union(f2.keys())) == 0
+    #f.update(f2)
     return f
 
 def jaccard_distance(textA, textB):

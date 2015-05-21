@@ -111,8 +111,8 @@ def create_different_urls():
     middle = "/all-sections/"
     end = "?api-key=e548999ea9b04cf78d32d9359d1f03a5:15:15145567"
 
-    share_types = ["mostviewed"]#["mostemailed", "mostviewed", "mostpopular"]
-    time_periods = [7] #[1, 7, 30]
+    share_types = ["mostemailed"]#["mostemailed", "mostviewed", "mostpopular"]
+    time_periods = [1] #[1, 7, 30]
     for most_what in share_types:
         for num_days in time_periods:
             url = beg + most_what + middle + str(num_days) + end
