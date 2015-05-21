@@ -38,7 +38,6 @@ def nltk_feats(text):
         if tag not in POS_TREEBANK_TAGS:
             feats['n_novel_tags'] += 1.0
         feats[tag] += 1.0
-    print feats
     return feats
 
 def textblob_feats(text):
@@ -58,17 +57,12 @@ def all_comment_feats(text):
 
 def jaccard_distance(textA, textB):
     import nltk
-    from nltk.metrics.distance import jaccard_distance
-    return jaccard_distance(set(nltk.word_tokenize(textA)), set(nltk.word_tokenize(textB)))
+    return nltk.metrics.distance.jaccard_distance(set(nltk.word_tokenize(textA)), set(nltk.word_tokenize(textB)))
 
 if __name__ == '__main__':
     simple = 'This is my comment'
-    feats = basic_feats(simple)
-    featsNLTK = nltk_feats(simple)
-    for k, v in feats.items():
-        assert feats[k] == featsNLTK[k]
+    feats = nltk_feats(simple)
     assert feats['n_chars'] == len(simple)
-    print feats['perc_2_char_words']
     assert feats['perc_2_char_words'] == 0.5
     assert feats['n_sentences'] == 1
     long = "I the only danger. But the only danger he had really been in was in the last half-hour of his imprisonment, when Owl, who had just flown up, sat on a branch of his tree to comfort him, and told him a very long story about an aunt who had once laid a seagull's egg by mistake, and the story went on and on, rather like this sentence."
@@ -76,4 +70,5 @@ if __name__ == '__main__':
     assert feats['starts_with_I'] == 1.0
     assert feats['n_periods'] == 2
     assert jaccard_distance('What how be', 'What how be 2') == 0.25
+    textblob_feats(simple)
     print 'All tests passed'
