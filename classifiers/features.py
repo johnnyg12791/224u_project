@@ -31,10 +31,13 @@ def nltk_feats(text):
 
     # Extraneous feats
     feats['starts_with_I'] = 1.0 if text[:2] == 'I ' else 0.0
-
+    feats['PhD'] = 1.0 if ('PhD' in text or 'phd' in text or 'Ph.D' in text or 'Phd' in text) else 0.0
+    feats['president'] = 1.0 if ('President' in text or 'president' in text) else 0.0
+    feats['God'] = 1.0 if ('God' in text or 'god' in text or 'GOD' in text or 'G-d' in text or 'g-d' in text) else 0.0
+    
     # Bag of parts of speech
-    '''
-    tagged = nltk.pos_tag(tokens)
+    
+    '''tagged = nltk.pos_tag(tokens)
     feats['n_novel_tags'] = 0.0
     for word, tag in tagged:
         if tag not in POS_TREEBANK_TAGS:
@@ -43,8 +46,8 @@ def nltk_feats(text):
 	    feats[tag] += 1
 	#feats[tag.replace(":", "colon")] += 1.0
 	    #print tag
-    #print feats
-    '''
+    #print feats'''
+   
     return feats
 
 def textblob_feats(text):
@@ -57,9 +60,9 @@ def textblob_feats(text):
 
 def all_comment_feats(text):
     f = nltk_feats(text)
-    #f2 = textblob_feats(text)
-    #assert len(set(f.keys()).union(f2.keys())) == 0
-    #f.update(f2)
+    f2 = textblob_feats(text)
+    assert len(set(f.keys()).union(f2.keys())) == 0
+    f.update(f2)
     return f
 
 def jaccard_distance(textA, textB):
