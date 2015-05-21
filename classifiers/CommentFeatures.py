@@ -105,6 +105,8 @@ class CommentFeatures():
 		gold = gold_cursor.fetchone()[0]
 		return gold 
 
+	#Method: makeFeatureDict
+	#This method will return a list of dictionaries containing the desired features. 
 	def makeFeatureDict(self, query, cutoff):
 		X = []
 		Y = []
@@ -153,6 +155,7 @@ class CommentFeatures():
 		self.d_x.extend(dev_noneditorX)
 		self.d_y.extend(Y)
 
+################ Model Selection: ###########################
 
 	#Method: bagOfWords
 	#Classification using bag of words model
@@ -175,19 +178,6 @@ class CommentFeatures():
 			self.t_x = count_vectorizer.transform(self.t_x)
 			self.d_x = count_vectorizer.transform(self.d_x)
 
-	#Method: extraFeaturesDict
-	#A function which will return a dict composed of [feature, value] pairs.
-	#Note that in order to call this function, you must have passed in a valid
-	#extra parameter selection statement.
-	#DEPRECATED in new version, where we now use getCommentFeatures()
-	def extraFeaturesDict(self, commentID):
-		self.c.execute(selectQuery, [commentID])
-		row = self.c.fetchone()
-		print row
-		features = {}
-		for feat_row, col in enumerate(self.c.description):
-			features[col[0]] = row[feat_row]
-		return features
 
 	#Method: extractCommentFeatures
 	#Populates self.t_x and self.d_x with features from database, without pullijg
@@ -224,7 +214,7 @@ class CommentFeatures():
 		predict_dev = self.classifier.predict(self.d_x)
 
 		#Report F1 statistics
-		print "Classified %d samples, using %d feature" % self.t_x.shape
+		print "Classified %d samples, using %d features" % self.t_x.shape
 		print "Training accuracy:"
 		t_acc = self.f1_accuracy(predict_train, self.t_y)
 		print "Dev accuracy:"
