@@ -4,23 +4,28 @@ import numpy as np
 import sklearn.feature_extraction as fe
 import sklearn.metrics as me
 from sklearn import svm
+import csv
 
 
 class CommentFeatures():
 
 #########Initialization/termination: ###############################
 	def __init__(self):
-		self.db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/nyt_comments.db")
+		self.db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/backup_may8.db")
 		self.c = self.db.cursor()
-		#Queries to return all of training or dev data, respectively. Customize if you need other columns
-		self.trainSelectQueryEditorPick = "SELECT CommentText, FullText, EditorSelection FROM Comments c, ArticleText a WHERE c.ArticleURL = a.URL AND c.TrainTest =1 AND c.EditorSelection = 1"
-		self.trainSelectQueryNonEditorPick = "SELECT CommentText, FullText, EditorSelection FROM Comments c, ArticleText a WHERE c.ArticleURL = a.URL AND c.TrainTest =1 AND c.EditorSelection = 0"
+		self.gold_cursor = self.db.cursor()
 
-		self.devSelectQueryEditorPick = "SELECT CommentText, FullText, EditorSelection FROM Comments c, ArticleText a WHERE c.ArticleURL = a.URL AND c.TrainTest =2 AND c.EditorSelection = 1"
-		self.devSelectQueryNonEditorPick = "SELECT CommentText, FullText, EditorSelection FROM Comments c, ArticleText a WHERE c.ArticleURL = a.URL AND c.TrainTest =2 AND c.EditorSelection = 0"
+		#Queries to return all of training or dev data, respectively. Customize if you need other columns
+		self.selectStatement = "SELECT CommentID, CommentText FROM Comments"
+
+		#User should provide a featureSelectQuery 
+		self.featureSelectionQuery = None
+		self.goldQuery = "SELECT EditorSelection FROM Comments WHERE CommentID = (?)"       
 
 		#Number of reviews to terminate at; useful for debugging
-		self.trainCutoffNum = 2000 #float("inf")
+		self.num_comments = float("inf")
+		self.numInTrain = 0
+		self.numInDev = 0
 		self.proportionEditorPicks = .25 #Artificially grab more editor pick reviews
 		#Feature vectors x and "editor results" y for train and dev:
 		#(not even going to touch test-- let's leave it clean!)
@@ -33,21 +38,48 @@ class CommentFeatures():
 
 	def close(self):
 		self.c.close()
+		self.gold_cursor.close()
 		self.db.close()
+
+#########Initialize and custom settings: ###############################
+
+	#Modify the default statement which is used to grab all reviews
+	def setSelectStatement(self, statement):
+		self.selectStatement = statement
+
+	#Add additional features to be used in the classification.
+	def setFeaturesQuery(self, featuresStatement):
+		self.featureSelectionQuery = featuresStatement
+
+	#Limit number of reviews for debugging/classification purposes
+	def limitNumComments(self, upperLimit):
+		self.num_comments = upperLimit
 
 #########Feature vector creation: ######################################
 
-	def getReviews(self):
+	#Method: createSelectStatments
+	#A method which will create custom select statements from the user-entered version for
+	#editor pick and non-editor pick train and dev data.
+	def createSelectStatements(self, statement):
+		self.trainSelectQueryEditorPick =  statement + " AND c.TrainTest =1 AND c.EditorSelection = 1"
+		self.trainSelectQueryNonEditorPick = statement + " AND c.TrainTest =1 AND c.EditorSelection = 0"
+		self.devSelectQueryEditorPick = statement + " AND c.TrainTest =2 AND c.EditorSelection = 1"
+		self.devSelectQueryNonEditorPick = statement + " AND c.TrainTest =2 AND c.EditorSelection = 0"
+
+	#Method: getReviews
+	#A method to return review fulltext as self.t_x and self.d_x, as well as a dict
+	#representing the additional features grabbed for each comment/article pair
+	def getCommentsBagOfWords(self):
 		#Grab train examples, add text and "golds:"
-		num_grabbed = 0
+		num_grabbed = 0	
 		#Artificially add 25% editor picks
-		for cText, aText, gold in self.c.execute (self.trainSelectQueryEditorPick):
+		for cID, cText, gold in self.c.execute (self.trainSelectQueryEditorPick):
 			self.t_x.append(cText)
 			self.t_y.append(gold)
 			num_grabbed += 1
 			if num_grabbed > self.trainCutoffNum * self.proportionEditorPicks: break
 		#Add 75% non-editor picks
-		for cText, aText, gold in self.c.execute (self.trainSelectQueryNonEditorPick):
+		for cID, cText, gold in self.c.execute (self.trainSelectQueryNonEditorPick):
 			self.t_x.append(cText)
 			self.t_y.append(gold)
 			num_grabbed += 1
@@ -55,21 +87,78 @@ class CommentFeatures():
 		#Grab dev examples, add text and "golds:"
 		num_grabbed = 0
 		#Artificially add 25% editor picks
-		for cText, aText, gold in self.c.execute (self.devSelectQueryEditorPick):
+		for cID, cText, gold in self.c.execute (self.devSelectQueryEditorPick):
 			self.d_x.append(cText)
 			self.d_y.append(gold)
 			if num_grabbed > self.trainCutoffNum * self.proportionEditorPicks: break
 		#Add 75% non-editor picks
-		for cText, aText, gold in self.c.execute (self.devSelectQueryNonEditorPick):
+		for cID, cText, gold in self.c.execute (self.devSelectQueryNonEditorPick):
 			self.d_x.append(cText)
 			self.d_y.append(gold)
 			if num_grabbed > self.trainCutoffNum: break
 
+	#Method: commentGold
+	#Returns the gold label for a given comment ID
+	def commentGold(self, commentID):
+		gold_cursor = self.db.cursor()
+		gold_cursor.execute(self.goldQuery, [commentID])
+		gold = gold_cursor.fetchone()[0]
+		return gold 
+
+	def makeFeatureDict(self, query, cutoff):
+		X = []
+		Y = []
+		num_comments = 0
+		for row in self.c.execute(query):
+			feature_dict = {}
+			for i, col in enumerate(self.c.description):
+				feature_dict[col[0]] = row[i]
+			commentID = feature_dict["CommentID"]
+			gold = self.commentGold(commentID)
+			X.append(feature_dict)
+			Y.append(gold)
+			#Check cutoff:
+			num_comments += 1
+			if num_comments > cutoff: break 
+		return (X, Y)
+
+
+	#Method: getCommentFeatures
+	#This method will set self.t_x and self.d_x to be vectors of comment features, and
+	#t_y and d_y to be the gold labels. Note that this relies on passing the model a
+	#feature selection query, and must have first thing you request be comment ID.
+	def getCommentFeatures(self):
+		self.createSelectStatements(self.featureSelectionQuery)
+		#Train, editor
+		train_editorX, Y = self.makeFeatureDict(
+			self.trainSelectQueryEditorPick, self.num_comments * self.proportionEditorPicks)
+		self.t_x.extend(train_editorX)
+		self.t_y.extend(Y)
+
+		#Train, non-editor
+		train_noneditorX, Y = self.makeFeatureDict(
+			self.trainSelectQueryNonEditorPick, self.num_comments * (1-self.proportionEditorPicks))
+		self.t_x.extend(train_noneditorX)
+		self.t_y.extend(Y)
+
+		#Dev, editor
+		dev_editorX, Y = self.makeFeatureDict(
+			self.devSelectQueryEditorPick, self.num_comments * self.proportionEditorPicks)
+		self.d_x.extend(dev_editorX)
+		self.d_y.extend(Y)
+
+		#Dev, non-editor
+		dev_noneditorX, Y = self.makeFeatureDict(
+			self.devSelectQueryNonEditorPick, self.num_comments * (1-self.proportionEditorPicks))
+		self.d_x.extend(dev_noneditorX)
+		self.d_y.extend(Y)
+
+
 	#Method: bagOfWords
 	#Classification using bag of words model
 	#Note that this does not take into account the article text
-	def bagOfWords(self, tfidf=True):
-		self.getReviews()
+	def bagOfWordsModel(self, tfidf=True):
+		self.getCommentsBagOfWords()
 		#Choose which vectorizing schematic to use:
 		if tfidf:
 			print "Creating features using tf-idf..."
@@ -86,6 +175,36 @@ class CommentFeatures():
 			self.t_x = count_vectorizer.transform(self.t_x)
 			self.d_x = count_vectorizer.transform(self.d_x)
 
+	#Method: extraFeaturesDict
+	#A function which will return a dict composed of [feature, value] pairs.
+	#Note that in order to call this function, you must have passed in a valid
+	#extra parameter selection statement.
+	#DEPRECATED in new version, where we now use getCommentFeatures()
+	def extraFeaturesDict(self, commentID):
+		self.c.execute(selectQuery, [commentID])
+		row = self.c.fetchone()
+		print row
+		features = {}
+		for feat_row, col in enumerate(self.c.description):
+			features[col[0]] = row[feat_row]
+		return features
+
+	#Method: extractCommentFeatures
+	#Populates self.t_x and self.d_x with features from database, without pullijg
+	#any of the text associated with the comment.
+	def featureModel(self):
+		#Initialize t_x, d_x, t_y, and d_y using getCommentFeatures method
+		self.getCommentFeatures()
+ 
+		#Vectorize comments; this would be the place to apply feature functions as desired
+		dict_vectorizer = fe.DictVectorizer()
+		dict_vectorizer.fit(self.t_x + self.d_x)
+
+		self.t_x = dict_vectorizer.transform(self.t_x)
+		self.d_x = dict_vectorizer.transform(self.d_x)
+
+
+
 
 ###########Set classifier type + parameters: ############################
 
@@ -98,23 +217,36 @@ class CommentFeatures():
 
 
 	def classify(self):
+		#Fit classifier, then classify train and dev examples
 		print "Starting classifier..."
 		self.classifier.fit(self.t_x, self.t_y)
 		predict_train = self.classifier.predict(self.t_x)
 		predict_dev = self.classifier.predict(self.d_x)
 
+		#Report F1 statistics
 		print "Classified %d samples, using %d feature" % self.t_x.shape
 		print "Training accuracy:"
-		self.f1_accuracy(predict_train, self.t_y)
+		t_acc = self.f1_accuracy(predict_train, self.t_y)
 		print "Dev accuracy:"
-		self.f1_accuracy(predict_dev, self.d_y)
+		d_acc = self.f1_accuracy(predict_dev, self.d_y)
+
+		#Save results to CSV
+		self.save_results(t_acc, d_acc)
 
 ##########Accuracy and Results: ##########################################
 
 	def f1_accuracy(self, predicted_vals, real_vals):
 		accuracy = me.f1_score(real_vals, predicted_vals)
 		print "F1 accuracy is %.3f" % accuracy
+		return accuracy 
 
+	def save_results(self, train, dev):
+		with open("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/results.csv", 'a') as results_file:
+			fields = ['f1_train', 'f1_dev', 'num_samples', 'num_features', 'classifier_type']
+			writer = csv.DictWriter(results_file, fieldnames=fields)
+			n_samples, n_features = self.t_x.shape
+			writer.writerow({'f1_train': train, 'f1_dev': dev, 
+    			'num_samples': n_samples, 'num_features': n_features, 'classifier_type': self.classifier})
 
 
 
