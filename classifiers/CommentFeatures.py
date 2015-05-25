@@ -198,6 +198,8 @@ class CommentFeatures():
 
 ###########Set classifier type + parameters: ############################
 
+	#Method: setLinearSVM
+	#Sets classifier to be very basic linear SVM
 	def setLinearSVM(self, C_val=1):
 		self.classifier = svm.LinearSVC(C=C_val)
 		print "Using linear SVM with C=%.f" % C_val
