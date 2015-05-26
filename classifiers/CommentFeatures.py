@@ -114,11 +114,7 @@ class CommentFeatures():
 		X = []
 		Y = []
 		num_comments = 0
-		seenit = {} #A hack to get around duplicates
 		for row in self.c.execute(query):
-			if row[0] not in seenit:
-				seenit[row[0]] = 1 ##TODO: remove once fix the tables
-				continue
 			feature_dict = {}
 			for i, col in enumerate(self.c.description):
 				val = row[i]
