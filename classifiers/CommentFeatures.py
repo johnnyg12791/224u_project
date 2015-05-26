@@ -270,7 +270,8 @@ class CommentFeatures():
 	def f1_accuracy(self, predicted_vals, real_vals):
 		accuracy = me.f1_score(real_vals, predicted_vals)
 		print "F1 accuracy is %.3f" % accuracy
-		return accuracy 
+		return accuracy
+
 
 	def save_results(self, train, dev):
 		with open("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/results.csv", 'a') as results_file:

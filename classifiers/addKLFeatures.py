@@ -18,8 +18,8 @@ def probabilities(sparse_vec):
 def process(text_list):
 	stripped_text = []
 	for text in text_list:
-		stripped_text.append(re.sub('[!\?\.\,-_()\[\]\"\']', '', text))
-	return text_list
+		stripped_text.append(re.sub(ur'[!\?\.\,-_()\[\]\"\'0123456789]', '', text))
+	return stripped_text
 
 #Vectorize inputs to raw counts; return the probabilities
 def raw_count_vectorizer(commentText, articleText):
@@ -36,12 +36,14 @@ def proper_noun_vectorizer(commentText, articleText):
 	comments = process(commentText)
 	articles = process(articleText)
 	#Extract proper nouns:
-	comment_tagged = pos_tag(commentText[0].split())
-	article_tagged = pos_tag(articleText[0].split())
+	comment_tagged = pos_tag(comments[0].split())
+	article_tagged = pos_tag(articles[0].split())
+	print "tagged :"
+	print comment_tagged
 	comment_nnps = [word for word,pos in comment_tagged if pos == 'NNP']
 	article_nnps = [word for word,pos in article_tagged if pos == 'NNP']
 	print comment_nnps
-	print article_nnps
+
 	#Vectorize and return proper nouns:
 	vectorizer = fe.text.CountVectorizer(stop_words='english')
 	vectorizer.fit(comment_nnps + article_nnps)
@@ -83,7 +85,7 @@ for c_id, c_text, a_text in loop_cursor.execute(get_fulltexts_query):
 		raw_kl, noun_kl = KL_divergence([c_text], [a_text])
 		print "Raw: %f; Nouns: %f" % (raw_kl, noun_kl)
 		count += 1
-		if count > 1: break #TODO: remove @ debug
+		if count > 0: break #TODO: remove @ debug
 
 #DB takedown:
 db.commit()
