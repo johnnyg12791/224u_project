@@ -55,6 +55,9 @@ class CommentFeatures():
 	def limitNumComments(self, upperLimit):
 		self.num_comments = upperLimit
 
+	def setVerbose(self, verbose=True):
+		self.verbose = verbose 
+
 #########Feature vector creation: ######################################
 
 	#Method: createSelectStatments
@@ -111,12 +114,21 @@ class CommentFeatures():
 		X = []
 		Y = []
 		num_comments = 0
+		seenit = {} #A hack to get around duplicates
 		for row in self.c.execute(query):
+			if row[0] not in seenit:
+				seenit[row[0]] = 1 ##TODO: remove once fix the tables
+				continue
 			feature_dict = {}
 			for i, col in enumerate(self.c.description):
-				feature_dict[col[0]] = row[i]
+				val = row[i]
+				if val == None: ##TODO: Remove once no longer adding null features
+					val = 0
+				feature_dict[col[0]] = val
 			commentID = feature_dict["CommentID"]
-			gold = self.commentGold(commentID)
+			#gold = self.commentGold(commentID)
+			print feature_dict
+			gold = feature_dict["EditorSelection"] #Second thing passed has to be editor pick
 			X.append(feature_dict)
 			Y.append(gold)
 			#Check cutoff:
@@ -137,11 +149,17 @@ class CommentFeatures():
 		self.t_x.extend(train_editorX)
 		self.t_y.extend(Y)
 
+		if self.verbose:
+			print "Created training/editor pick vectors"
+
 		#Train, non-editor
 		train_noneditorX, Y = self.makeFeatureDict(
 			self.trainSelectQueryNonEditorPick, self.num_comments * (1-self.proportionEditorPicks))
 		self.t_x.extend(train_noneditorX)
 		self.t_y.extend(Y)
+
+		if self.verbose:
+			print "Created training/non-editor pick vectors"
 
 		#Dev, editor
 		dev_editorX, Y = self.makeFeatureDict(
@@ -149,11 +167,18 @@ class CommentFeatures():
 		self.d_x.extend(dev_editorX)
 		self.d_y.extend(Y)
 
+		if self.verbose:
+			print "Created dev/editor pick vectors"
+
 		#Dev, non-editor
 		dev_noneditorX, Y = self.makeFeatureDict(
 			self.devSelectQueryNonEditorPick, self.num_comments * (1-self.proportionEditorPicks))
 		self.d_x.extend(dev_noneditorX)
 		self.d_y.extend(Y)
+
+
+		if self.verbose:
+			print "Created comment feature vectors"
 
 ################ Model Selection: ###########################
 
@@ -178,20 +203,33 @@ class CommentFeatures():
 			self.t_x = count_vectorizer.transform(self.t_x)
 			self.d_x = count_vectorizer.transform(self.d_x)
 
+		if self.verbose:
+			print "Vectorized bag of words."
+
 
 	#Method: extractCommentFeatures
 	#Populates self.t_x and self.d_x with features from database, without pullijg
 	#any of the text associated with the comment.
 	def featureModel(self):
+
+		if self.verbose:
+			print "Slow af step"
+
 		#Initialize t_x, d_x, t_y, and d_y using getCommentFeatures method
 		self.getCommentFeatures()
+
+		if self.verbose:
+			print "Selected comment features"
  
 		#Vectorize comments; this would be the place to apply feature functions as desired
-		dict_vectorizer = fe.DictVectorizer()
-		dict_vectorizer.fit(self.t_x + self.d_x)
+		self.vectorizer = fe.DictVectorizer()
+		self.vectorizer.fit(self.t_x + self.d_x)
 
-		self.t_x = dict_vectorizer.transform(self.t_x)
-		self.d_x = dict_vectorizer.transform(self.d_x)
+		self.t_x = self.vectorizer.transform(self.t_x)
+		self.d_x = self.vectorizer.transform(self.d_x)
+
+		if self.verbose:
+			print "Vectorized extracted features"
 
 
 
@@ -211,6 +249,8 @@ class CommentFeatures():
 	def classify(self):
 		#Fit classifier, then classify train and dev examples
 		print "Starting classifier..."
+		print self.t_x 
+		print self.vectorizer.get_feature_names()
 		self.classifier.fit(self.t_x, self.t_y)
 		predict_train = self.classifier.predict(self.t_x)
 		predict_dev = self.classifier.predict(self.d_x)
