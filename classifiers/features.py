@@ -1,3 +1,4 @@
+import string
 from collections import defaultdict
 
 def nltk_feats(text):
@@ -30,15 +31,20 @@ def nltk_feats(text):
 
     # Extraneous feats
     feats['starts_with_I'] = 1.0 if text[:2] == 'I ' else 0.0
-
+    feats['PhD'] = 1.0 if ('PhD' in text or 'phd' in text or 'Ph.D' in text or 'Phd' in text) else 0.0
+    feats['president'] = 1.0 if ('President' in text or 'president' in text) else 0.0
+    feats['God'] = 1.0 if ('God' in text or 'god' in text or 'GOD' in text or 'G-d' in text or 'g-d' in text) else 0.0
+    
     # Bag of parts of speech
-    tagged = nltk.pos_tag(tokens)
+    
+    '''tagged = nltk.pos_tag(tokens)
     feats['n_novel_tags'] = 0.0
     for word, tag in tagged:
-        if tag not in POS_TREEBANK_TAGS:
-            feats['n_novel_tags'] += 1.0
-        feats[tag] += 1.0
-    print feats
+        if tag in POS_TREEBANK_TAGS:
+            feats[tag] += 1.0
+	    #print tag
+    #print feats'''
+   
     return feats
 
 def textblob_feats(text):
@@ -52,23 +58,21 @@ def textblob_feats(text):
 def all_comment_feats(text):
     f = nltk_feats(text)
     f2 = textblob_feats(text)
-    assert len(set(f.keys()).union(f2.keys())) == 0
+    if len(set(f.keys()).intersection(f2.keys())) != 0:
+        print 'Intersection:'
+        print set(f.keys()).intersection(f2.keys())
+        raise Exception('Oh no, overlap detected!')
     f.update(f2)
     return f
 
 def jaccard_distance(textA, textB):
     import nltk
-    from nltk.metrics.distance import jaccard_distance
-    return jaccard_distance(set(nltk.word_tokenize(textA)), set(nltk.word_tokenize(textB)))
+    return nltk.metrics.distance.jaccard_distance(set(nltk.word_tokenize(textA)), set(nltk.word_tokenize(textB)))
 
 if __name__ == '__main__':
     simple = 'This is my comment'
-    feats = basic_feats(simple)
-    featsNLTK = nltk_feats(simple)
-    for k, v in feats.items():
-        assert feats[k] == featsNLTK[k]
+    feats = nltk_feats(simple)
     assert feats['n_chars'] == len(simple)
-    print feats['perc_2_char_words']
     assert feats['perc_2_char_words'] == 0.5
     assert feats['n_sentences'] == 1
     long = "I the only danger. But the only danger he had really been in was in the last half-hour of his imprisonment, when Owl, who had just flown up, sat on a branch of his tree to comfort him, and told him a very long story about an aunt who had once laid a seagull's egg by mistake, and the story went on and on, rather like this sentence."
@@ -76,4 +80,5 @@ if __name__ == '__main__':
     assert feats['starts_with_I'] == 1.0
     assert feats['n_periods'] == 2
     assert jaccard_distance('What how be', 'What how be 2') == 0.25
+    textblob_feats(simple)
     print 'All tests passed'
