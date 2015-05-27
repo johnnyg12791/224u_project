@@ -3,8 +3,8 @@ from collections import defaultdict
 
 def nltk_feats(text):
     import nltk
-    # Penn Discourse Treebank
-    POS_TREEBANK_TAGS = {'CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS', 'LS', 'MD', 'NN', 'NNS', 'NNP', 'NNPS', 'PDT', 'POS', 'PRP', 'PRP$', 'RB', 'RBR', 'RBS', 'RP', 'SYM', 'TO', 'UH', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'WDT', 'WP', 'WP$', 'WRB'}
+    # Penn Discourse Treebank #I removed 'TO' and 'IN' -John
+    POS_TREEBANK_TAGS = {'CC', 'CD', 'DT', 'EX', 'FW', 'JJ', 'JJR', 'JJS', 'LS', 'MD', 'NN', 'NNS', 'NNP', 'NNPS', 'PDT', 'POS', 'PRP', 'PRP$', 'RB', 'RBR', 'RBS', 'RP', 'SYM', 'UH', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'WDT', 'WP', 'WP$', 'WRB'}
     MAX_CHARS_PER_WORD = 20
 
     feats = defaultdict(float)
@@ -34,17 +34,20 @@ def nltk_feats(text):
     feats['PhD'] = 1.0 if ('PhD' in text or 'phd' in text or 'Ph.D' in text or 'Phd' in text) else 0.0
     feats['president'] = 1.0 if ('President' in text or 'president' in text) else 0.0
     feats['God'] = 1.0 if ('God' in text or 'god' in text or 'GOD' in text or 'G-d' in text or 'g-d' in text) else 0.0
-    
+    feats['Obama'] = 1.0 if ('Obama' in text or 'obama' in text) else 0.0
+    feats['Agree'] = 1.0 if ('I agree' in text or "I don't disagree" in text or "I do not disagree" in text) else 0.0
+    feats['Disagree'] = 1.0 if ('I disagree' in text or "I don't agree" in text or "I do not agree" in text) else 0.0
+
     # Bag of parts of speech
-    
-    '''tagged = nltk.pos_tag(tokens)
+        
+    tagged = nltk.pos_tag(tokens)
     feats['n_novel_tags'] = 0.0
     for word, tag in tagged:
         if tag in POS_TREEBANK_TAGS:
             feats[tag] += 1.0
 	    #print tag
-    #print feats'''
-   
+    #print feats
+    
     return feats
 
 def textblob_feats(text):
@@ -57,9 +60,9 @@ def textblob_feats(text):
 
 def all_comment_feats(text):
     f = nltk_feats(text)
-    f2 = textblob_feats(text)
-    assert len(set(f.keys()).union(f2.keys())) == 0
-    f.update(f2)
+    #f2 = textblob_feats(text)
+    #assert len(set(f.keys()).union(f2.keys())) == 0
+    #f.update(f2)
     return f
 
 def jaccard_distance(textA, textB):
