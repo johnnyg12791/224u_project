@@ -45,7 +45,7 @@ def save_full_article(url):
 	    finalText += par.text_content()
 
 	exec_cursor.execute("UPDATE Articles SET AddedText=1 WHERE URL = ?", (url,))
-	exec_cursor.execute("INSERT OR IGNORE INTO ArticleText (URL, FullText) VALUES (?, ?)", (url, finalText))
+	exec_cursor.execute("INSERT INTO ArticleText VALUES (?, 1, ?)", (url, finalText))
 	comments_db.commit()
 
 #Open database and access cursors:
