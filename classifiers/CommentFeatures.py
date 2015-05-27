@@ -4,6 +4,8 @@ import numpy as np
 import sklearn.feature_extraction as fe
 import sklearn.metrics as me
 from sklearn import svm
+from sklearn import linear_model
+from sklearn import decomposition
 import csv
 
 
@@ -26,7 +28,7 @@ class CommentFeatures():
 		self.num_comments = float("inf")
 		self.numInTrain = 0
 		self.numInDev = 0
-		self.proportionEditorPicks = .25 #Artificially grab more editor pick reviews
+		self.proportionEditorPicks = .5 #Artificially grab more editor pick reviews
 		#Feature vectors x and "editor results" y for train and dev:
 		#(not even going to touch test-- let's leave it clean!)
 		#Train:
@@ -58,7 +60,10 @@ class CommentFeatures():
 	def setVerbose(self, verbose=True):
 		self.verbose = verbose 
 
-#########Feature vector creation: ######################################
+	def setEditorPicksProportion(self, proportion):
+		self.proportionEditorPicks = proportion
+
+#########Raw feature vector creation: ######################################
 
 	#Method: createSelectStatments
 	#A method which will create custom select statements from the user-entered version for
@@ -175,6 +180,26 @@ class CommentFeatures():
 		if self.verbose:
 			print "Created comment feature vectors"
 
+################ Cleaning up feature vectors: ###############
+
+	#Method: calcPCA
+	#Perform PCA feature selection on train and dev x data
+	def calcPCA(self):
+		#Normalize data vectors:
+		self.t_x = (self.t_x - np.mean(self.t_x, 0)) / np.std(self.t_x, 0)
+		self.d_x = (self.d_x - np.mean(self.d_x, 0)) / np.std(self.d_x, 0)
+
+		#Fit on train
+		pca = decomposition.PCA(n_components='mle') # n_components is the components number after reduction
+		print "PCA:"
+		print type(pca)
+    	pca.fit(self.t_x)
+
+    	#Apply to train and test
+    	self.t_x = pca.transform(self.t_x)
+    	pca.transform(self.d_x)
+
+
 ################ Model Selection: ###########################
 
 	#Method: bagOfWords
@@ -206,10 +231,6 @@ class CommentFeatures():
 	#Populates self.t_x and self.d_x with features from database, without pullijg
 	#any of the text associated with the comment.
 	def featureModel(self):
-
-		if self.verbose:
-			print "Slow af step"
-
 		#Initialize t_x, d_x, t_y, and d_y using getCommentFeatures method
 		self.getCommentFeatures()
 
@@ -236,6 +257,10 @@ class CommentFeatures():
 	def setLinearSVM(self, C_val=1):
 		self.classifier = svm.LinearSVC(C=C_val)
 		print "Using linear SVM with C=%.f" % C_val
+
+	def setSGD(self):
+		self.classifier = linear_model.SGDClassifier()
+		print "Using SGD classifier"
 
 
 ###########Classification step: ##########################################
