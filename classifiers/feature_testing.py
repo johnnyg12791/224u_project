@@ -6,7 +6,7 @@ medium_query = "SELECT c.CommentID, c.EditorSelection, JJ, n_periods, WP, n_sent
 
 
 cf = CommentFeatures()
-cf.limitNumComments(300)
+cf.limitNumComments(3000)
 cf.setVerbose()
 cf.setFeaturesQuery(all_query)
 cf.setLinearSVM()

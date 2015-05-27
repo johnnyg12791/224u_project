@@ -18,7 +18,7 @@ def probabilities(sparse_vec):
 def process(text_list):
 	stripped_text = []
 	for text in text_list:
-		stripped_text.append(re.sub(ur'[!\?\.\,-_()\[\]\"\'0123456789]', '', text))
+		stripped_text.append(re.sub(ur'[!\?\.\,-_()\[\]\"\'\%0123456789]', '', text))
 	return stripped_text
 
 #Vectorize inputs to raw counts; return the probabilities
@@ -38,18 +38,29 @@ def proper_noun_vectorizer(commentText, articleText):
 	#Extract proper nouns:
 	comment_tagged = pos_tag(comments[0].split())
 	article_tagged = pos_tag(articles[0].split())
-	print "tagged :"
-	print comment_tagged
-	comment_nnps = [word for word,pos in comment_tagged if pos == 'NNP']
-	article_nnps = [word for word,pos in article_tagged if pos == 'NNP']
-	print comment_nnps
+
+	#comment_nnps = [word for word,pos in comment_tagged if pos == 'NN' or pos =='NP']
+	#article_nnps = [word for word,pos in article_tagged if pos == 'NN' or pos =='NP']
+
+	comment_nnps = u""
+	for word, pos in comment_tagged:
+		if pos == 'NN' or pos =='NP':
+			comment_nnps += u" " + word
+
+	article_nnps = u""
+	for word, pos in article_tagged:
+		if pos == 'NN' or pos =='NP':
+			article_nnps += u" " + word
+
 
 	#Vectorize and return proper nouns:
-	vectorizer = fe.text.CountVectorizer(stop_words='english')
-	vectorizer.fit(comment_nnps + article_nnps)
-	c_dict = vectorizer.transform(comment_nnps)
-	a_dict = vectorizer.transform(article_nnps)
+	vectorizer = fe.text.CountVectorizer()
+	vectorizer.fit([comment_nnps] + [article_nnps])
+	c_dict = vectorizer.transform([comment_nnps])
+	a_dict = vectorizer.transform([article_nnps])
+
 	return (probabilities(c_dict), probabilities(a_dict))
+
 
 #Subroutine to find Kullback-Leibler distance
 def KL_score(c_probs, a_probs):
@@ -65,6 +76,8 @@ def KL_divergence(comment_text, article_text):
 	#Raw score:
 	c_probs, a_probs = raw_count_vectorizer(comment_text, article_text)
 	raw_score = KL_score(c_probs, a_probs)
+	
+	#raw_score = scipy.stats.entropy(c_probs.data, qk=a_probs.data)
 	#Noun-only score
 	c_probs, a_probs = proper_noun_vectorizer(comment_text, article_text)
 	noun_score = KL_score(c_probs, a_probs)
@@ -85,7 +98,7 @@ for c_id, c_text, a_text in loop_cursor.execute(get_fulltexts_query):
 		raw_kl, noun_kl = KL_divergence([c_text], [a_text])
 		print "Raw: %f; Nouns: %f" % (raw_kl, noun_kl)
 		count += 1
-		if count > 0: break #TODO: remove @ debug
+		if count > 40: break #TODO: remove @ debug
 
 #DB takedown:
 db.commit()
