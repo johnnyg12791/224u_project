@@ -21,12 +21,13 @@ def main():
 	numGrabbed = 0
 	command = "SELECT DISTINCT ArticleURL FROM Comments EXCEPT SELECT URL FROM ArticleText"
 	print "main"
-	for url in loop_cursor.execute(command):
+	loop_cursor.execute(command)
+	for url in loop_cursor.fetchall():
 		#Upload full text
+		numGrabbed += 1
+		print "Processing %s %d/%d articles" % (url[0], numGrabbed, NUM_TO_SCRAPE)
 		save_full_article(url[0])
 		#Update number, break if at max
-		numGrabbed += 1
-		print "Processed %d/%d articles" % (numGrabbed, NUM_TO_SCRAPE)
 		if numGrabbed == NUM_TO_SCRAPE:
 			break
 		time.sleep(SCRAPE_PAUSE)
