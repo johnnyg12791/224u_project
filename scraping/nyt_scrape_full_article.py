@@ -12,8 +12,8 @@ import lxml.html as lh
 import time
 
 #TODO: make num_to_scrape something you can call
-NUM_TO_SCRAPE = 100 #How many articles you wish to scrape at this time
-SCRAPE_PAUSE = 1 #pause between requests to NYT.com
+NUM_TO_SCRAPE = 4000 #How many articles you wish to scrape at this time
+SCRAPE_PAUSE = 5 #pause between requests to NYT.com
 get_from_comments = True #Set to True to get only articles with comments already in DB
 
 #Add fulltext of NYT articles to "Articles" table in DB
