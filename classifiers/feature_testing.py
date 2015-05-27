@@ -13,12 +13,12 @@ cf.setVerbose()
 cf.setFeaturesQuery(all_query)
 
 #Choose classifier: (Choose ONE)
-#cf.setLinearSVM()
-cf.setSGD()
+cf.setLinearSVM()
+#cf.setSGD()
 
 #Query the database to make feature vectors/clean data:
 cf.featureModel()
-cf.calcPCA()
+#cf.calcPCA()
 
 #Perform the classification step, show metrics:
 cf.classify()
