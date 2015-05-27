@@ -19,7 +19,7 @@ SCRAPE_PAUSE = 5 #pause between requests to NYT.com
 def main():
 	#Find articles which need their fulltext added:
 	numGrabbed = 0
-	command = "SELECT ArticleURL FROM Comments EXCEPT SELECT URL FROM ArticleText"
+	command = "SELECT DISTINCT ArticleURL FROM Comments EXCEPT SELECT URL FROM ArticleText"
 	print "main"
 	for url in loop_cursor.execute(command):
 		#Upload full text
