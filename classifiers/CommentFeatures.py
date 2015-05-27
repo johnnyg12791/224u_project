@@ -4,6 +4,8 @@ import numpy as np
 import sklearn.feature_extraction as fe
 import sklearn.metrics as me
 from sklearn import svm
+from sklearn import linear_model
+from sklearn import decomposition
 import csv
 
 
@@ -26,7 +28,7 @@ class CommentFeatures():
 		self.num_comments = float("inf")
 		self.numInTrain = 0
 		self.numInDev = 0
-		self.proportionEditorPicks = .25 #Artificially grab more editor pick reviews
+		self.proportionEditorPicks = .5 #Artificially grab more editor pick reviews
 		#Feature vectors x and "editor results" y for train and dev:
 		#(not even going to touch test-- let's leave it clean!)
 		#Train:
@@ -55,7 +57,13 @@ class CommentFeatures():
 	def limitNumComments(self, upperLimit):
 		self.num_comments = upperLimit
 
-#########Feature vector creation: ######################################
+	def setVerbose(self, verbose=True):
+		self.verbose = verbose 
+
+	def setEditorPicksProportion(self, proportion):
+		self.proportionEditorPicks = proportion
+
+#########Raw feature vector creation: ######################################
 
 	#Method: createSelectStatments
 	#A method which will create custom select statements from the user-entered version for
@@ -114,9 +122,13 @@ class CommentFeatures():
 		for row in self.c.execute(query):
 			feature_dict = {}
 			for i, col in enumerate(self.c.description):
-				feature_dict[col[0]] = row[i]
+				val = row[i]
+				if val == None: ##TODO: Remove once no longer adding null features
+					val = 0
+				feature_dict[col[0]] = val
 			commentID = feature_dict["CommentID"]
-			gold = self.commentGold(commentID)
+			#gold = self.commentGold(commentID)
+			gold = feature_dict["EditorSelection"] #Second thing passed has to be editor pick
 			X.append(feature_dict)
 			Y.append(gold)
 			#Check cutoff:
@@ -137,11 +149,17 @@ class CommentFeatures():
 		self.t_x.extend(train_editorX)
 		self.t_y.extend(Y)
 
+		if self.verbose:
+			print "Created training/editor pick vectors"
+
 		#Train, non-editor
 		train_noneditorX, Y = self.makeFeatureDict(
 			self.trainSelectQueryNonEditorPick, self.num_comments * (1-self.proportionEditorPicks))
 		self.t_x.extend(train_noneditorX)
 		self.t_y.extend(Y)
+
+		if self.verbose:
+			print "Created training/non-editor pick vectors"
 
 		#Dev, editor
 		dev_editorX, Y = self.makeFeatureDict(
@@ -149,11 +167,38 @@ class CommentFeatures():
 		self.d_x.extend(dev_editorX)
 		self.d_y.extend(Y)
 
+		if self.verbose:
+			print "Created dev/editor pick vectors"
+
 		#Dev, non-editor
 		dev_noneditorX, Y = self.makeFeatureDict(
 			self.devSelectQueryNonEditorPick, self.num_comments * (1-self.proportionEditorPicks))
 		self.d_x.extend(dev_noneditorX)
 		self.d_y.extend(Y)
+
+
+		if self.verbose:
+			print "Created comment feature vectors"
+
+################ Cleaning up feature vectors: ###############
+
+	#Method: calcPCA
+	#Perform PCA feature selection on train and dev x data
+	def calcPCA(self):
+		#Normalize data vectors:
+		self.t_x = (self.t_x - np.mean(self.t_x, 0)) / np.std(self.t_x, 0)
+		self.d_x = (self.d_x - np.mean(self.d_x, 0)) / np.std(self.d_x, 0)
+
+		#Fit on train
+		pca = decomposition.PCA(n_components='mle') # n_components is the components number after reduction
+		print "PCA:"
+		print type(pca)
+    	pca.fit(self.t_x)
+
+    	#Apply to train and test
+    	self.t_x = pca.transform(self.t_x)
+    	pca.transform(self.d_x)
+
 
 ################ Model Selection: ###########################
 
@@ -178,6 +223,9 @@ class CommentFeatures():
 			self.t_x = count_vectorizer.transform(self.t_x)
 			self.d_x = count_vectorizer.transform(self.d_x)
 
+		if self.verbose:
+			print "Vectorized bag of words."
+
 
 	#Method: extractCommentFeatures
 	#Populates self.t_x and self.d_x with features from database, without pullijg
@@ -185,22 +233,34 @@ class CommentFeatures():
 	def featureModel(self):
 		#Initialize t_x, d_x, t_y, and d_y using getCommentFeatures method
 		self.getCommentFeatures()
+
+		if self.verbose:
+			print "Selected comment features"
  
 		#Vectorize comments; this would be the place to apply feature functions as desired
-		dict_vectorizer = fe.DictVectorizer()
-		dict_vectorizer.fit(self.t_x + self.d_x)
+		self.vectorizer = fe.DictVectorizer()
+		self.vectorizer.fit(self.t_x + self.d_x)
 
-		self.t_x = dict_vectorizer.transform(self.t_x)
-		self.d_x = dict_vectorizer.transform(self.d_x)
+		self.t_x = self.vectorizer.transform(self.t_x)
+		self.d_x = self.vectorizer.transform(self.d_x)
+
+		if self.verbose:
+			print "Vectorized extracted features"
 
 
 
 
 ###########Set classifier type + parameters: ############################
 
+	#Method: setLinearSVM
+	#Sets classifier to be very basic linear SVM
 	def setLinearSVM(self, C_val=1):
 		self.classifier = svm.LinearSVC(C=C_val)
 		print "Using linear SVM with C=%.f" % C_val
+
+	def setSGD(self):
+		self.classifier = linear_model.SGDClassifier()
+		print "Using SGD classifier"
 
 
 ###########Classification step: ##########################################
@@ -209,6 +269,8 @@ class CommentFeatures():
 	def classify(self):
 		#Fit classifier, then classify train and dev examples
 		print "Starting classifier..."
+		if self.verbose:
+			print self.vectorizer.get_feature_names()
 		self.classifier.fit(self.t_x, self.t_y)
 		predict_train = self.classifier.predict(self.t_x)
 		predict_dev = self.classifier.predict(self.d_x)
@@ -217,8 +279,11 @@ class CommentFeatures():
 		print "Classified %d samples, using %d features" % self.t_x.shape
 		print "Training accuracy:"
 		t_acc = self.f1_accuracy(predict_train, self.t_y)
+		self.p_r_f_s(self.t_y, predict_train)
 		print "Dev accuracy:"
 		d_acc = self.f1_accuracy(predict_dev, self.d_y)
+		self.p_r_f_s(self.t_y, predict_dev)
+
 
 		#Save results to CSV
 		self.save_results(t_acc, d_acc)
@@ -228,7 +293,13 @@ class CommentFeatures():
 	def f1_accuracy(self, predicted_vals, real_vals):
 		accuracy = me.f1_score(real_vals, predicted_vals)
 		print "F1 accuracy is %.3f" % accuracy
-		return accuracy 
+		return accuracy
+
+	def p_r_f_s(self, real_vals, predicted_vals):
+		p, r, f, s = me.precision_recall_fscore_support(real_vals, predicted_vals)
+		print "Precision = %.3f, recall = %.3f, f1 = %.3f, support = %.3f" %(p[0], r[0], f[0], s[0])
+		return p, r, f, s 
+
 
 	def save_results(self, train, dev):
 		with open("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/results.csv", 'a') as results_file:

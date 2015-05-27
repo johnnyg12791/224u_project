@@ -60,9 +60,12 @@ def textblob_feats(text):
 
 def all_comment_feats(text):
     f = nltk_feats(text)
-    #f2 = textblob_feats(text)
-    #assert len(set(f.keys()).union(f2.keys())) == 0
-    #f.update(f2)
+    f2 = textblob_feats(text)
+    if len(set(f.keys()).intersection(f2.keys())) != 0:
+        print 'Intersection:'
+        print set(f.keys()).intersection(f2.keys())
+        raise Exception('Oh no, overlap detected!')
+    f.update(f2)
     return f
 
 def jaccard_distance(textA, textB):

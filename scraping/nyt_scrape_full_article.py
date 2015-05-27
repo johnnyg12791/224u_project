@@ -11,28 +11,23 @@ import sqlite3
 import lxml.html as lh
 import time
 
-
-
-
 #TODO: make num_to_scrape something you can call
-NUM_TO_SCRAPE = 100 #How many articles you wish to scrape at this time
-SCRAPE_PAUSE = 1 #pause between requests to NYT.com
-get_from_comments = True #Set to True to get only articles with comments already in DB
+NUM_TO_SCRAPE = 4000 #How many articles you wish to scrape at this time
+SCRAPE_PAUSE = 5 #pause between requests to NYT.com
 
 #Add fulltext of NYT articles to "Articles" table in DB
 def main():
 	#Find articles which need their fulltext added:
 	numGrabbed = 0
-	command = "SELECT URL FROM Articles WHERE AddedText = 0"
-	if get_from_comments:
-		command = "SELECT ArticleURL FROM Comments"
+	command = "SELECT DISTINCT ArticleURL FROM Comments EXCEPT SELECT URL FROM ArticleText"
 	print "main"
-	for url in loop_cursor.execute(command):
+	loop_cursor.execute(command)
+	for url in loop_cursor.fetchall():
 		#Upload full text
+		numGrabbed += 1
+		print "Processing %s %d/%d articles" % (url[0], numGrabbed, NUM_TO_SCRAPE)
 		save_full_article(url[0])
 		#Update number, break if at max
-		numGrabbed += 1
-		print "Processed %d/%d articles" % (numGrabbed, NUM_TO_SCRAPE)
 		if numGrabbed == NUM_TO_SCRAPE:
 			break
 		time.sleep(SCRAPE_PAUSE)
@@ -48,7 +43,8 @@ def save_full_article(url):
 	    finalText += par.text_content()
 
 	exec_cursor.execute("UPDATE Articles SET AddedText=1 WHERE URL = ?", (url,))
-	exec_cursor.execute("INSERT OR IGNORE INTO ArticleText (URL, FullText) VALUES (?, ?)", (url, finalText))
+	exec_cursor.execute("INSERT INTO ArticleText VALUES (?, 1, ?)", (url, finalText))
+	comments_db.commit()
 
 #Open database and access cursors:
 comments_db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/nyt_comments.db")
