@@ -123,7 +123,6 @@ class CommentFeatures():
 				feature_dict[col[0]] = val
 			commentID = feature_dict["CommentID"]
 			#gold = self.commentGold(commentID)
-			print feature_dict
 			gold = feature_dict["EditorSelection"] #Second thing passed has to be editor pick
 			X.append(feature_dict)
 			Y.append(gold)
@@ -245,8 +244,8 @@ class CommentFeatures():
 	def classify(self):
 		#Fit classifier, then classify train and dev examples
 		print "Starting classifier..."
-		print self.t_x 
-		print self.vectorizer.get_feature_names()
+		if self.verbose:
+			print self.vectorizer.get_feature_names()
 		self.classifier.fit(self.t_x, self.t_y)
 		predict_train = self.classifier.predict(self.t_x)
 		predict_dev = self.classifier.predict(self.d_x)
@@ -255,8 +254,11 @@ class CommentFeatures():
 		print "Classified %d samples, using %d features" % self.t_x.shape
 		print "Training accuracy:"
 		t_acc = self.f1_accuracy(predict_train, self.t_y)
+		self.p_r_f_s(self.t_y, predict_train)
 		print "Dev accuracy:"
 		d_acc = self.f1_accuracy(predict_dev, self.d_y)
+		self.p_r_f_s(self.t_y, predict_dev)
+
 
 		#Save results to CSV
 		self.save_results(t_acc, d_acc)
@@ -267,6 +269,11 @@ class CommentFeatures():
 		accuracy = me.f1_score(real_vals, predicted_vals)
 		print "F1 accuracy is %.3f" % accuracy
 		return accuracy
+
+	def p_r_f_s(self, real_vals, predicted_vals):
+		p, r, f, s = me.precision_recall_fscore_support(real_vals, predicted_vals)
+		print "Precision = %.3f, recall = %.3f, f1 = %.3f, support = %.3f" %(p[0], r[0], f[0], s[0])
+		return p, r, f, s 
 
 
 	def save_results(self, train, dev):
