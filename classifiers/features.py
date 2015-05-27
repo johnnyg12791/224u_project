@@ -59,8 +59,9 @@ def all_comment_feats(text):
     f = nltk_feats(text)
     f2 = textblob_feats(text)
     if len(set(f.keys()).intersection(f2.keys())) != 0:
-        print 'Oh no, overlap detected!'
+        print 'Intersection:'
         print set(f.keys()).intersection(f2.keys())
+        raise Exception('Oh no, overlap detected!')
     f.update(f2)
     return f
 

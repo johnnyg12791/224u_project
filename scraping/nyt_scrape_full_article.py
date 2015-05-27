@@ -11,9 +11,6 @@ import sqlite3
 import lxml.html as lh
 import time
 
-
-
-
 #TODO: make num_to_scrape something you can call
 NUM_TO_SCRAPE = 100 #How many articles you wish to scrape at this time
 SCRAPE_PAUSE = 1 #pause between requests to NYT.com
@@ -23,7 +20,7 @@ get_from_comments = True #Set to True to get only articles with comments already
 def main():
 	#Find articles which need their fulltext added:
 	numGrabbed = 0
-	command = "SELECT URL FROM Articles WHERE AddedText = 0"
+	command = "SELECT URL FROM Articles EXCEPT SELECT URL FROM ArticleText"
 	if get_from_comments:
 		command = "SELECT ArticleURL FROM Comments"
 	print "main"
@@ -49,6 +46,7 @@ def save_full_article(url):
 
 	exec_cursor.execute("UPDATE Articles SET AddedText=1 WHERE URL = ?", (url,))
 	exec_cursor.execute("INSERT OR IGNORE INTO ArticleText (URL, FullText) VALUES (?, ?)", (url, finalText))
+	comments_db.commit()
 
 #Open database and access cursors:
 comments_db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/nyt_comments.db")
