@@ -5,15 +5,19 @@ import sklearn.feature_extraction as fe
 import sklearn.metrics as me
 from sklearn import svm
 from sklearn import linear_model
-from sklearn import decomposition
+from sklearn.decomposition import PCA 
 import csv
+import scipy.sparse as sps 
+from matplotlib.mlab import PCA as mlabPCA
+import heapq
+
 
 
 class CommentFeatures():
 
 #########Initialization/termination: ###############################
 	def __init__(self):
-		self.db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/nyt_comments.db")
+		self.db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/backup_may8.db")
 		self.c = self.db.cursor()
 		self.gold_cursor = self.db.cursor()
 
@@ -37,6 +41,8 @@ class CommentFeatures():
 		#Dev:
 		self.d_x = []
 		self.d_y = []
+
+		self.BOWvectorizer = None #A standin for "using bag of words"
 
 	def close(self):
 		self.c.close()
@@ -77,18 +83,21 @@ class CommentFeatures():
 	#Method: getReviews
 	#A method to return review fulltext as self.t_x and self.d_x, as well as a dict
 	#representing the additional features grabbed for each comment/article pair
-	def getCommentsBagOfWords(self):
+	#The t_x and d_x parameters are in case you are going to run another features set
+	#after bag of words; in which case, you will want to vectorize these vectors separately.
+	def getCommentsBagOfWords(self, t_x, d_x):
+
 		#Grab train examples, add text and "golds:"
 		num_grabbed = 0	
 		#Artificially add 25% editor picks
 		for cID, cText, gold in self.c.execute (self.trainSelectQueryEditorPick):
-			self.t_x.append(cText)
+			t_x.append(cText)
 			self.t_y.append(gold)
 			num_grabbed += 1
 			if num_grabbed > self.trainCutoffNum * self.proportionEditorPicks: break
 		#Add 75% non-editor picks
 		for cID, cText, gold in self.c.execute (self.trainSelectQueryNonEditorPick):
-			self.t_x.append(cText)
+			t_x.append(cText)
 			self.t_y.append(gold)
 			num_grabbed += 1
 			if num_grabbed > self.trainCutoffNum: break
@@ -96,14 +105,15 @@ class CommentFeatures():
 		num_grabbed = 0
 		#Artificially add 25% editor picks
 		for cID, cText, gold in self.c.execute (self.devSelectQueryEditorPick):
-			self.d_x.append(cText)
+			d_x.append(cText)
 			self.d_y.append(gold)
 			if num_grabbed > self.trainCutoffNum * self.proportionEditorPicks: break
 		#Add 75% non-editor picks
 		for cID, cText, gold in self.c.execute (self.devSelectQueryNonEditorPick):
-			self.d_x.append(cText)
+			d_x.append(cText)
 			self.d_y.append(gold)
 			if num_grabbed > self.trainCutoffNum: break
+
 
 	#Method: commentGold
 	#Returns the gold label for a given comment ID
@@ -182,6 +192,7 @@ class CommentFeatures():
 
 ################ Cleaning up feature vectors: ###############
 
+
 	#Method: calcPCA
 	#Perform PCA feature selection on train and dev x data
 	def calcPCA(self):
@@ -190,14 +201,7 @@ class CommentFeatures():
 		self.d_x = (self.d_x - np.mean(self.d_x, 0)) / np.std(self.d_x, 0)
 
 		#Fit on train
-		pca = decomposition.PCA(n_components='mle') # n_components is the components number after reduction
-		print "PCA:"
-		print type(pca)
-    	pca.fit(self.t_x)
-
-    	#Apply to train and test
-    	self.t_x = pca.transform(self.t_x)
-    	pca.transform(self.d_x)
+		
 
 
 ################ Model Selection: ###########################
@@ -206,7 +210,7 @@ class CommentFeatures():
 	#Classification using bag of words model
 	#Note that this does not take into account the article text
 	def bagOfWordsModel(self, tfidf=True):
-		self.getCommentsBagOfWords()
+		self.getCommentsBagOfWords(self.t_x, self.d_x)
 		#Choose which vectorizing schematic to use:
 		if tfidf:
 			print "Creating features using tf-idf..."
@@ -247,7 +251,12 @@ class CommentFeatures():
 		if self.verbose:
 			print "Vectorized extracted features"
 
-
+	#Method: featuresAndCommentWordsModel
+	#A feature model based on extracted features + BOW on the comments.
+	def featuresAndCommentWordsModel(self, tfidf=True):
+		bow_t_x = []
+		bow_d_x = []
+		self.getCommentsBagOfWords(t_x=bow_t_x, d_x=bow_d_x)
 
 
 ###########Set classifier type + parameters: ############################
@@ -265,7 +274,9 @@ class CommentFeatures():
 
 ###########Classification step: ##########################################
 
-
+	#Method: classify
+	#Run the classifier specified under self.classifier on the train and
+	#dev data. Report the analysis.
 	def classify(self):
 		#Fit classifier, then classify train and dev examples
 		print "Starting classifier..."
@@ -288,7 +299,28 @@ class CommentFeatures():
 		#Save results to CSV
 		self.save_results(t_acc, d_acc)
 
+	def makeNamesList(self):
+		feature_names = []
+		feature_names.extend(self.vectorizer.get_feature_names())
+		if self.BOWvectorizer != None:
+			feature_names.extend(self.BOWvectorizer.get_feature_names())
+		return feature_names
+
+	#Method: topNCoefficients
+	#This method will record the top N coefficients used during the classifier
+	#step.
+	def topNCoefficients(self, numToPrint):
+		weights = self.classifier.coef_.tolist()
+		numTop = numToPrint
+		names = self.makeNamesList()
+		if len(names) < numTop:
+		    numTop = len(names)
+		tops = heapq.nlargest(numTop, enumerate(weights[0]), key=lambda x: abs(x[1])) #Use absolute magnitude of weight as key
+		for item in tops:
+		    print "Item " + names[item[0]].encode('utf-8') + " has weight " + str(item[1])
+
 ##########Accuracy and Results: ##########################################
+
 
 	def f1_accuracy(self, predicted_vals, real_vals):
 		accuracy = me.f1_score(real_vals, predicted_vals)

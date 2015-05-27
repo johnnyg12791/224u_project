@@ -11,6 +11,8 @@ import re
 
 #Return the probabilities of each word in the vector
 def probabilities(sparse_vec):
+	if sparse_vec.sum() == 0:
+		return sparse_vec
 	return sparse_vec/sparse_vec.sum()
 
 #Strip punctuation from text to improve vectorizing
@@ -87,18 +89,22 @@ def KL_divergence(comment_text, article_text):
 
 
 ##DB setup:
-db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/all_comments_backup.db")
+db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/all_comms_basic_feat_backup_may27.db")
 loop_cursor = db.cursor()
 setter_cursor = db.cursor()
 count = 0
 
+get_fulltext_no_repeats_query = "SELECT c.CommentID, CommentText, FullText, KLDistance FROM ArticleText a, Comments c, Features f WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID"
 get_fulltexts_query = "SELECT CommentID, CommentText, FullText FROM ArticleText a, Comments c WHERE c.ArticleURL=a.URL"
 for c_id, c_text, a_text in loop_cursor.execute(get_fulltexts_query):
-	if len(c_text) > 0 and len(a_text) > 0:
+#for c_id, c_text, a_text, klD in loop_cursor.execute(get_fulltext_no_repeats_query):
+	if len(c_text) > 0 and len(a_text) > 0: #Check haven't already added kl distance
 		raw_kl, noun_kl = KL_divergence([c_text], [a_text])
-		print "Raw: %f; Nouns: %f" % (raw_kl, noun_kl)
+		print "Raw: %f; Nouns: %f: commentID = %d" % (raw_kl, noun_kl, c_id)
+		setter_cursor.execute("UPDATE Features SET KLDistance = ?, KLDistance_Nouns = ? WHERE CommentID = ?", (raw_kl, noun_kl, c_id))
 		count += 1
-		if count > 40: break #TODO: remove @ debug
+		if count % 10 == 0:
+			db.commit()
 
 #DB takedown:
 db.commit()
