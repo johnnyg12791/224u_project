@@ -113,3 +113,7 @@ if __name__ == '__main__':
     traintest = (pickle.load(open(WORKING_DIR + 'features_' + PICKLE_SMALL_TRAIN)),
                  pickle.load(open(WORKING_DIR + 'features_' + PICKLE_SMALL_TEST)))
     SGDClassify(*traintest)
+
+
+
+    
