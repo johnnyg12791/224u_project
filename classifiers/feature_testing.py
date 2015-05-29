@@ -9,7 +9,7 @@ jaccard_query = "SELECT jaccard, EditorSelection FROM Features c WHERE CommentID
 nltk_query = "SELECT * FROM Features c WHERE CommentID > 1 "
 
 #Initialize features model:
-cf = CommentFeatures()
+cf = CommentFeatures("../john_test_4.db")
 
 #Set cutoff on review count, verbosity, features query:
 cf.limitNumComments(50000) #50,000 samples will be our default "small" size
@@ -28,8 +28,8 @@ cf.featureModel()
 #cf.calcPCA()
 
 #Perform the classification step, show metrics:
-cf.classify()
-cf.topNCoefficients(20) #Check to see which coefficients are assigned highest classification weight
+cf.classify("classify_results.csv")
+cf.topNCoefficients(10) #Check to see which coefficients are most popular
 
 #Close up the database, cursors, etc
 cf.close()
