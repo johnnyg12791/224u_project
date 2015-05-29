@@ -122,7 +122,7 @@ def bump_metrics(train):
     import random
     X = train[0]
     Y = train[1]
-    to_select = [random.random() > (0.1 if ylabel else 0.9) for ylabel in Y]
+    to_select = [ylabel or random.random() > 0.95 for ylabel in Y]
     X = [x for i, x in enumerate(X) if to_select[i]]
     Y = [y for i, y in enumerate(Y) if to_select[i]]
     return X, Y
@@ -147,8 +147,8 @@ def SGDClassify(train, test):
 
     train = list(train)
     test = list(test)
-    train[0] = calcPCA(train[0])
-    test[0] = calcPCA(test[0])
+    # train[0] = calcPCA(train[0])
+    # test[0] = calcPCA(test[0])
 
     clf = linear_model.SGDClassifier()
     clf.fit(*train)
@@ -200,6 +200,42 @@ def addPickCommentsToTable():
 #     predicted = text_clf.predict(docs_test)
 
 
+def load_train_test(*db_names):
+    firstTime = True
+    for db_name, col_names in db_names:
+        db = sqlite3.connect(db_name)
+        cursor = db.cursor()
+        cursor.execute('SELECT * FROM Features')
+        data = cursor.fetchall()
+
+        if firstTime:
+            length = len(data)
+            trainX = [d[3:] for d in data if d[2] == 1]
+            trainY = [d[1] for d in data if d[2] == 1]
+            testX = [d[3:] for d in data if d[2] == 2]
+            testY = [d[1] for d in data if d[2] == 2]
+            firstTime = False
+        else:
+            assert len(data) == length
+            assert sum(1 for d in data if d[2] == 1) == len(trainX)
+            assert sum(1 for d in data if d[2] == 2) == len(testX)
+            train_i = 0
+            test_i = 0
+            for d in data:
+                if d[2] == 1:
+                    trainX[train_i] += d[3:]
+                    train_i += 1
+                elif d[2] == 2:
+                    testX[test_i] += d[3:]
+                    test_i += 1
+            assert test_i == len(testX)
+            assert train_i == len(trainX)
+        cursor.close()
+        db.close()
+        print 'step complete'
+
+    return ((trainX, trainY), (testX, testY))
+
 if __name__ == '__main__':
     # if len(sys.argv) > 1:
     #     WORKING_DIR = sys.argv[1]
@@ -213,9 +249,8 @@ if __name__ == '__main__':
 
     # save_features(PICKLE_SMALL_TRAIN)
     # save_features(PICKLE_SMALL_TEST)
-    # traintest = (pickle.load(open(WORKING_DIR + 'features_' + PICKLE_TRAIN)),
-    #              pickle.load(open(WORKING_DIR + 'features_' + PICKLE_TEST)))
-    # SGDClassify(*traintest)
+    traintest = load_train_test(('jacc_features.db', ['']))
+    SGDClassify(*traintest)
 
-    save_features_to_db(PICKLE_COMMENTS, 'nltk_features.db')
+    # save_features_to_db(PICKLE_COMMENTS, 'nltk_features.db')
     # save_overlap_to_db('comments.db', 'jacc_features.db')

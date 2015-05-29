@@ -4,6 +4,7 @@ trivial_query = "SELECT c.CommentID, perc_5_char_words, perc_3_char_words, words
 all_query = "SELECT f.* FROM Comments c, Features f WHERE c.CommentID = f.CommentID"
 medium_query = "SELECT c.CommentID, c.EditorSelection, JJ, n_periods, WP, n_sentences, perc_1_char_words, NN, starts_with_I, CC, n_chars, n_upper, n_words, VBZ FROM Features f, Comments c WHERE c.CommentID = f.CommentID"
 
+'SELECT f.n_sentences, nltk.POS, FROM Features f, nltk_features nltk JOIN '
 #Initialize features model:
 cf = CommentFeatures()
 
