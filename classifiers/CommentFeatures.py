@@ -17,12 +17,13 @@ class CommentFeatures():
 
 #########Initialization/termination: ###############################
 	def __init__(self):
-		self.db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/nyt_comments.db")
+		self.db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/nltk_features.db")
 		self.c = self.db.cursor()
 		self.gold_cursor = self.db.cursor()
 
 		#Queries to return all of training or dev data, respectively. Customize if you need other columns
 		self.selectStatement = "SELECT CommentID, CommentText, EditorSelection FROM Comments c WHERE CommentText IS NOT NULL "
+		self.trainCutoffNum = float("inf")
 
 		#User should provide a featureSelectQuery 
 		self.featureSelectionQuery = None
@@ -185,7 +186,7 @@ class CommentFeatures():
 					gold = row[i]
 				elif col[0] == "CommentText":
 					bow_X.append(val)
-				elif col[0] == "CommentID":
+				elif col[0] == "CommentID" or col[0] == "TrainTest":
 					continue
 				#Add columns to features:
 				else:
@@ -285,12 +286,12 @@ class CommentFeatures():
 		if tfidf:
 			print "Creating features using tf-idf..."
 			#Vectorize using TF-IDF scheme:
-			self.vectorizer = fe.text.TfidfVectorizer() #Set binary to true for rough estim
+			self.vectorizer = fe.text.TfidfVectorizer(stop_words='english') #Set binary to true for rough estim
 		else:
 			print "Creating features using non-normalized bag of words..."
 			#Use a standard count-vectorizer model
 			self.vectorizer = fe.text.CountVectorizer()
-			
+
 		self.vectorizer.fit(self.t_x + self.d_x)
 		self.t_x = self.vectorizer.transform(self.t_x)
 		self.d_x = self.vectorizer.transform(self.d_x)

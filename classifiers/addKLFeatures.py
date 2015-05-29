@@ -94,10 +94,10 @@ loop_cursor = db.cursor()
 setter_cursor = db.cursor()
 count = 0
 
-get_fulltext_no_repeats_query = "SELECT c.CommentID, CommentText, FullText, KLDistance FROM ArticleText a, Comments c, Features f WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID"
+get_fulltext_no_repeats_query = "SELECT c.CommentID, CommentText, FullText, KLDistance FROM ArticleText a, Comments c, Features f WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND f.KLDistance IS NULL "
 get_fulltexts_query = "SELECT CommentID, CommentText, FullText FROM ArticleText a, Comments c WHERE c.ArticleURL=a.URL"
-for c_id, c_text, a_text in loop_cursor.execute(get_fulltexts_query):
-#for c_id, c_text, a_text, klD in loop_cursor.execute(get_fulltext_no_repeats_query):
+#for c_id, c_text, a_text in loop_cursor.execute(get_fulltexts_query):
+for c_id, c_text, a_text, klD in loop_cursor.execute(get_fulltext_no_repeats_query):
 	if len(c_text) > 0 and len(a_text) > 0: #Check haven't already added kl distance
 		raw_kl, noun_kl = KL_divergence([c_text], [a_text])
 		print "Raw: %f; Nouns: %f: commentID = %d" % (raw_kl, noun_kl, c_id)
