@@ -13,6 +13,7 @@ cf = CommentFeatures()
 
 #Set cutoff on review count, verbosity, features query:
 cf.limitNumComments(50000) #50,000 samples will be our default "small" size
+cf.setEditorPicksProportion(.5) #Start with a 50/50 editor/non-editor split
 cf.setVerbose()
 cf.setFeaturesQuery(nltk_query)
 
