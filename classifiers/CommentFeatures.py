@@ -16,8 +16,11 @@ import heapq
 class CommentFeatures():
 
 #########Initialization/termination: ###############################
-	def __init__(self):
-		self.db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/backup_may8.db")
+	def __init__(self, DB_PATH="nyt"):
+		if DB_PATH == "nyt" :
+			self.db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/backup_may8.db")
+		else:
+			self.db = sqlite3.connect(DB_PATH)
 		self.c = self.db.cursor()
 		self.gold_cursor = self.db.cursor()
 
@@ -277,7 +280,7 @@ class CommentFeatures():
 	#Method: classify
 	#Run the classifier specified under self.classifier on the train and
 	#dev data. Report the analysis.
-	def classify(self):
+	def classify(self, save_file="afs"):
 		#Fit classifier, then classify train and dev examples
 		print "Starting classifier..."
 		if self.verbose:
@@ -297,7 +300,7 @@ class CommentFeatures():
 
 
 		#Save results to CSV
-		self.save_results(t_acc, d_acc)
+		self.save_results(t_acc, d_acc, save_file)
 
 	def makeNamesList(self):
 		feature_names = []
@@ -333,8 +336,10 @@ class CommentFeatures():
 		return p, r, f, s 
 
 
-	def save_results(self, train, dev):
-		with open("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/results.csv", 'a') as results_file:
+	def save_results(self, train, dev, save_file):
+		if save_file == "afs":
+			save_file = "/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/results.csv"
+		with open(save_file, 'a') as results_file:
 			fields = ['f1_train', 'f1_dev', 'num_samples', 'num_features', 'classifier_type']
 			writer = csv.DictWriter(results_file, fieldnames=fields)
 			n_samples, n_features = self.t_x.shape

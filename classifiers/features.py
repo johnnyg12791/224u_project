@@ -5,7 +5,7 @@ def nltk_feats(text):
     import nltk
     # Penn Discourse Treebank #I removed 'TO' and 'IN' -John
     POS_TREEBANK_TAGS = {'CC', 'CD', 'DT', 'EX', 'FW', 'JJ', 'JJR', 'JJS', 'LS', 'MD', 'NN', 'NNS', 'NNP', 'NNPS', 'PDT', 'POS', 'PRP', 'PRP$', 'RB', 'RBR', 'RBS', 'RP', 'SYM', 'UH', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'WDT', 'WP', 'WP$', 'WRB'}
-    MAX_CHARS_PER_WORD = 20
+    MAX_CHARS_PER_WORD = 1 #20
 
     feats = defaultdict(float)
     tokens = nltk.word_tokenize(text)
@@ -40,13 +40,13 @@ def nltk_feats(text):
 
     # Bag of parts of speech
         
-    tagged = nltk.pos_tag(tokens)
+    '''tagged = nltk.pos_tag(tokens)
     feats['n_novel_tags'] = 0.0
     for word, tag in tagged:
         if tag in POS_TREEBANK_TAGS:
             feats[tag] += 1.0
 	    #print tag
-    #print feats
+    #print feats'''
     
     return feats
 
@@ -60,12 +60,12 @@ def textblob_feats(text):
 
 def all_comment_feats(text):
     f = nltk_feats(text)
-    f2 = textblob_feats(text)
+    '''f2 = textblob_feats(text)
     if len(set(f.keys()).intersection(f2.keys())) != 0:
         print 'Intersection:'
         print set(f.keys()).intersection(f2.keys())
         raise Exception('Oh no, overlap detected!')
-    f.update(f2)
+    f.update(f2)'''
     return f
 
 def jaccard_distance(textA, textB):
