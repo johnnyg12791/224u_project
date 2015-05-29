@@ -57,7 +57,7 @@ def add_similarity_metric(database, feature_name, feature_fct):
         #print similarity
         #print jaccard_sim(word_vec(comment_text), word_vec(article_text))
         #raw_input("")
-        insert_statement = ("UPDATE Features SET %s= %f WHERE CommentID = %d" % (feature_name, similarity, comment_id))
+        insert_statement = ("UPDATE Features SET %s = %f WHERE CommentID = %d" % (feature_name, similarity, comment_id))
         cursor.execute(insert_statement)
         
         if counter % 1000 == 0 :

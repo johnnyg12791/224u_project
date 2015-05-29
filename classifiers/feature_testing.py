@@ -9,7 +9,7 @@ jaccard_query = "SELECT jaccard, EditorSelection FROM Features c WHERE CommentID
 nltk_query = "SELECT * FROM Features c WHERE CommentID > 1 "
 
 #Initialize features model:
-cf = CommentFeatures("../john_test_4.db")
+cf = CommentFeatures("../john_test_5.db")
 
 #Set cutoff on review count, verbosity, features query:
 cf.limitNumComments(50000) #50,000 samples will be our default "small" size
