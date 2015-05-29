@@ -67,9 +67,11 @@ class CommentFeatures():
 	def limitNumComments(self, upperLimit):
 		self.trainCutoffNum = upperLimit
 
+	#Set verbose; note that right now this is 80% debugging output
 	def setVerbose(self, verbose=True):
 		self.verbose = verbose 
 
+	#Set the artificial number of editor picks to be "proportion"
 	def setEditorPicksProportion(self, proportion):
 		self.proportionEditorPicks = proportion
 
@@ -78,11 +80,20 @@ class CommentFeatures():
 	#Method: createSelectStatments
 	#A method which will create custom select statements from the user-entered version for
 	#editor pick and non-editor pick train and dev data.
-	def createSelectStatements(self, statement):
+	def createSelectStatementsOld(self, statement):
 		self.trainSelectQueryEditorPick =  statement + " AND c.TrainTest =1 AND c.EditorSelection = 1"
 		self.trainSelectQueryNonEditorPick = statement + " AND c.TrainTest =1 AND c.EditorSelection = 0"
 		self.devSelectQueryEditorPick = statement + " AND c.TrainTest =2 AND c.EditorSelection = 1"
 		self.devSelectQueryNonEditorPick = statement + " AND c.TrainTest =2 AND c.EditorSelection = 0"
+
+	#Method: createSelectStatments
+	#A method which will create custom select statements from the user-entered version for
+	#editor pick and non-editor pick train and dev data.
+	def createSelectStatements(self, statement):
+		self.trainSelectQueryEditorPick =  statement + " WHERE TrainTest =1 AND EditorSelection = 1"
+		self.trainSelectQueryNonEditorPick = statement + " WHERE TrainTest =1 AND EditorSelection = 0"
+		self.devSelectQueryEditorPick = statement + " WHERE TrainTest =2 AND EditorSelection = 1"
+		self.devSelectQueryNonEditorPick = statement + " WHERE TrainTest =2 AND EditorSelection = 0"
 
 	#Method: createCommentIDSelectStatement
 	#Create individual select statement that will pull the features associated with
