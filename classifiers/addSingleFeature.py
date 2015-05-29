@@ -43,13 +43,19 @@ def add_similarity_metric(database, feature_name, feature_fct):
     make_sure_feature_in_db(cursor, feature_name)
 
     #Then cycle through all comments
-    comments_data = [(c_id, c_text) for (c_id, c_text) in cursor.execute("SELECT CommentID, CommentText FROM Comments")]
+    comments_data = []
+    for c_id, c_text in cursor.execute("SELECT CommentID, CommentText FROM Comments"):
+        comments_data.append((c_id, c_text))
+        if len(comments_data) > cutoffNum:
+            break ##TODO: remove @ debug
+    #comments_data = [(c_id, c_text) for (c_id, c_text) in cursor.execute("SELECT CommentID, CommentText FROM Comments")]
     counter = 0
     start = time.time()
 
     #Maybe I should store all article text in a dictionary, comment_id --> text
     id_to_url, url_to_article = get_article_text_dictionary(cursor)
     #Could be faster than all the DB joins..
+
     for comment_id, comment_text in comments_data:    
         #article_text = get_article_text_from_comment(cursor, comment_id)
         article_text = url_to_article[str(id_to_url[comment_id])]
@@ -59,7 +65,7 @@ def add_similarity_metric(database, feature_name, feature_fct):
         #raw_input("")
         insert_statement = ("UPDATE Features SET %s = %f WHERE CommentID = %d" % (feature_name, similarity, comment_id))
         cursor.execute(insert_statement)
-        
+
         if counter % 1000 == 0 :
             print counter, " took ", time.time() - start
             database.commit()
@@ -68,6 +74,22 @@ def add_similarity_metric(database, feature_name, feature_fct):
     cursor.close() 
     database.commit()   
 
+def updated_add_similarity_metric(database, feature_name, feature_fct):
+    cursor = database.cursor()
+    make_sure_feature_in_db(cursor, feature_name)
+
+    counter = 0
+    get_fulltexts_query = "SELECT CommentID, CommentText, FullText FROM ArticleText a, Comments c WHERE c.ArticleURL=a.URL"
+    for c_id, c_text, a_text in cursor.execute(get_fulltexts_query):
+        similarity = feature_fct(word_vec(c_text), word_vec(a_text))
+
+        counter += 1
+        if counter % 1000 == 0:
+            database.commit()
+        if counter > cutoffNum: break
+
+    cursor.close()
+    database.commit()
 
 #What I really want is two dictionaries
 #comment_id --> url
@@ -75,7 +97,7 @@ def add_similarity_metric(database, feature_name, feature_fct):
 def get_article_text_dictionary(cursor):
     id_to_url = {}
     url_to_article = {}
-
+    comment_id_url = []
     comment_id_url = [(c_id, url) for (c_id, url) in cursor.execute("SELECT CommentID, ArticleURL FROM Comments")]
     for c_id, url in comment_id_url:
         id_to_url[c_id] = url
@@ -121,6 +143,12 @@ def jaccard_sim(x, y):
     intersection = len(set(x).intersection(set(y)))
     return intersection/union
 
+#Method: jaccard_similarity_skipgrams
+#Adds "skipgrams"-- like a bigram, but with up to k words separating them--
+#to the database, under the jaccard similarity metric.
+def jaccard_similarity_skipgrams(x, y):
+    print x 
+
 
 def euclidean_sim(x, y):
     pass
@@ -131,12 +159,16 @@ def main():
     #add_feature_to_database(database, "IAmA", ["I'm a", "I am a", "I am an", "I'm an"])
     #add_feature_to_database(database, "Europe")
 
-    add_similarity_metric(database, "Cosine", cosine_sim)
+    add_similarity_metric(database, "skipgrams_2", jaccard_similarity_skipgrams)
+    #add_similarity_metric(database, "Cosine", cosine_sim)
     #add_similarity_metric(database, "Jaccard", jaccard_sim)
     #add_similarity_metric(database, "Euclidean", euclidean_sim)
 
     database.close()
 
-
+verbose = True 
+cutoffNum = 10
 if __name__ == "__main__":
     main()
+
+
