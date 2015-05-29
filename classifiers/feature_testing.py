@@ -12,7 +12,7 @@ cf = CommentFeatures()
 #Set cutoff on review count, verbosity, features query:
 cf.limitNumComments(50000) #50,000 samples will be our default "small" size
 cf.setVerbose()
-cf.setFeaturesQuery(subj_query)
+cf.setFeaturesQuery(all_query)
 
 #Choose classifier: (Choose ONE)
 #cf.setLinearSVM()
@@ -20,7 +20,8 @@ cf.setSGD()
 
 #Query the database to make feature vectors/clean data:
 #cf.featureModel()
-cf.featuresAndCommentWordsModel()
+#cf.featuresAndCommentWordsModel()
+cf.bagOfWordsModel()
 #cf.calcPCA()
 
 #Perform the classification step, show metrics:

@@ -173,17 +173,20 @@ class CommentFeatures():
 		Y = []
 		num_comments = 0
 		for row in self.c.execute(query):
-
 			feature_dict = {}
+			blanks_flag = 0
 			for i, col in enumerate(self.c.description):
 				val = row[i]
 				if val == None: ##TODO: Remove once no longer adding null features
 					val = 0
+					blanks_flag = 1 #Hackey way to screen out "incompletely featured" comments
 				#Append EditorSelection to golds:
 				if col[0] == "EditorSelection":
 					gold = row[i]
 				elif col[0] == "CommentText":
 					bow_X.append(val)
+				elif col[0] == "CommentID":
+					continue
 				#Add columns to features:
 				else:
 					feature_dict[col[0]] = val
@@ -192,8 +195,9 @@ class CommentFeatures():
 				#Precondition: must have selected CommentText
 				commentText = feature_dict["CommentText"]
 
-			X.append(feature_dict)
-			Y.append(gold)
+			if blanks_flag == 0:
+				X.append(feature_dict)
+				Y.append(gold)
 			#Check cutoff:
 			num_comments += 1
 			if num_comments > cutoff: break 
@@ -281,17 +285,15 @@ class CommentFeatures():
 		if tfidf:
 			print "Creating features using tf-idf..."
 			#Vectorize using TF-IDF scheme:
-			tfidf_vectorizer = fe.text.TfidfVectorizer() #Set binary to true for rough estim
-			tfidf_vectorizer.fit(self.t_x + self.d_x)
-			self.t_x = tfidf_vectorizer.transform(self.t_x)
-			self.d_x = tfidf_vectorizer.transform(self.d_x)
+			self.vectorizer = fe.text.TfidfVectorizer() #Set binary to true for rough estim
 		else:
 			print "Creating features using non-normalized bag of words..."
 			#Use a standard count-vectorizer model
-			count_vectorizer = fe.text.CountVectorizer()
-			count_vectorizer.fit(self.t_x + self.d_x)
-			self.t_x = count_vectorizer.transform(self.t_x)
-			self.d_x = count_vectorizer.transform(self.d_x)
+			self.vectorizer = fe.text.CountVectorizer()
+			
+		self.vectorizer.fit(self.t_x + self.d_x)
+		self.t_x = self.vectorizer.transform(self.t_x)
+		self.d_x = self.vectorizer.transform(self.d_x)
 
 		if self.verbose:
 			print "Vectorized bag of words."
@@ -406,6 +408,7 @@ class CommentFeatures():
 		#Fit classifier, then classify train and dev examples
 		print "Starting classifier..."
 		if self.verbose:
+			print "Classifying based on features:"
 			print self.vectorizer.get_feature_names()
 		self.classifier.fit(self.t_x, self.t_y)
 		predict_train = self.classifier.predict(self.t_x)
