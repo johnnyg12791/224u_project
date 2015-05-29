@@ -6,10 +6,11 @@ medium_query = "SELECT c.CommentID, c.EditorSelection, c.CommentText, JJ, n_peri
 KLD_query = "SELECT KLDistance, KLDistance_Nouns FROM Features f, Comments c WHERE KLDistance IS NOT NULL AND c.CommentID = f.CommentID "
 subj_query = "SELECT subjectivity, polarity, c.CommentID, c.EditorSelection, c.CommentText FROM Comments c, Features f WHERE c.CommentID = f.CommentID "
 jaccard_query = "SELECT jaccard, EditorSelection FROM Features c WHERE CommentID > 1 "
-nltk_query = "SELECT * FROM Features c WHERE CommentID > 1 "
+nltk_query = "SELECT f.*, c.TrainTest, c.CommentText FROM Features f, Comments c WHERE c.CommentID = f.CommentID "
+basic_af = "SELECT * FROM Comments "
 
 #Initialize features model:
-cf = CommentFeatures("../john_test_4.db")
+cf = CommentFeatures()
 
 #Set cutoff on review count, verbosity, features query:
 cf.limitNumComments(50000) #50,000 samples will be our default "small" size
@@ -28,8 +29,8 @@ cf.featureModel()
 #cf.calcPCA()
 
 #Perform the classification step, show metrics:
-cf.classify("classify_results.csv")
-cf.topNCoefficients(10) #Check to see which coefficients are most popular
+cf.classify()
+cf.topNCoefficients(20) #Check to see which coefficients are assigned highest classification weight
 
 #Close up the database, cursors, etc
 cf.close()

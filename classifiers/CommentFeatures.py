@@ -18,7 +18,7 @@ class CommentFeatures():
 #########Initialization/termination: ###############################
 	def __init__(self, DB_PATH="nyt"):
 		if DB_PATH == "nyt" :
-			self.db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/backup_may8.db")
+			self.db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/nyt_comments.db")
 		else:
 			self.db = sqlite3.connect(DB_PATH)
 		self.c = self.db.cursor()
@@ -80,7 +80,7 @@ class CommentFeatures():
 	#Method: createSelectStatments
 	#A method which will create custom select statements from the user-entered version for
 	#editor pick and non-editor pick train and dev data.
-	def createSelectStatementsOld(self, statement):
+	def createSelectStatements(self, statement):
 		self.trainSelectQueryEditorPick =  statement + " AND c.TrainTest =1 AND c.EditorSelection = 1"
 		self.trainSelectQueryNonEditorPick = statement + " AND c.TrainTest =1 AND c.EditorSelection = 0"
 		self.devSelectQueryEditorPick = statement + " AND c.TrainTest =2 AND c.EditorSelection = 1"
@@ -89,7 +89,7 @@ class CommentFeatures():
 	#Method: createSelectStatments
 	#A method which will create custom select statements from the user-entered version for
 	#editor pick and non-editor pick train and dev data.
-	def createSelectStatements(self, statement):
+	def createSelectStatementsNew(self, statement):
 		self.trainSelectQueryEditorPick =  statement + " WHERE TrainTest =1 AND EditorSelection = 1"
 		self.trainSelectQueryNonEditorPick = statement + " WHERE TrainTest =1 AND EditorSelection = 0"
 		self.devSelectQueryEditorPick = statement + " WHERE TrainTest =2 AND EditorSelection = 1"
@@ -194,7 +194,7 @@ class CommentFeatures():
 				val = row[i]
 				if val == None: ##TODO: Remove once no longer adding null features
 					val = 0
-					blanks_flag = 1 #Hackey way to screen out "incompletely featured" comments
+					#blanks_flag = 1 #Hackey way to screen out "incompletely featured" comments
 				#Append EditorSelection to golds:
 				if col[0] == "EditorSelection":
 					gold = row[i]
