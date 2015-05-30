@@ -9,6 +9,7 @@ jaccard_query = "SELECT Jaccard, EditorSelection FROM Features c WHERE CommentID
 nltk_query = "SELECT f.*, c.TrainTest, c.CommentText FROM Features f, Comments c WHERE c.CommentID = f.CommentID "
 basic_af = "SELECT * FROM Comments c WHERE CommentID > 1"
 n_chars = "SELECT Agree, PhD, Jaccard, EditorSelection FROM Features c WHERE CommentID > 1"
+basic_af = "SELECT * FROM Features "
 
 #Initialize features model:
 cf = CommentFeatures("../john_test_5.db")
@@ -17,16 +18,18 @@ cf = CommentFeatures("../john_test_5.db")
 cf.limitNumComments(15000) #50,000 samples will be our default "small" size
 cf.setEditorPicksProportion(0.5, 0.5) #Start with a 50/50 editor/non-editor split
 cf.setVerbose()
-cf.setFeaturesQuery(all_query)
+
 
 #Choose classifier: (Choose ONE)
-cf.setLinearSVM()
-#cf.setSGD()
+#cf.setLinearSVM()
+cf.setSGD()
 #cf.setKernelSVM("poly")
+#cf.setRandomForest()
 
 #Query the database to make feature vectors/clean data:
 cf.featureModel()
 #cf.featuresAndCommentWordsModel()
+#cf.recursiveFeatureElimination()
 #cf.bagOfWordsModel()
 #cf.calcPCA()
 
