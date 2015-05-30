@@ -8,7 +8,7 @@ subj_query = "SELECT subjectivity, polarity, c.CommentID, c.EditorSelection, c.C
 jaccard_query = "SELECT Jaccard, EditorSelection FROM Features c WHERE CommentID > 1 "
 nltk_query = "SELECT f.*, c.TrainTest, c.CommentText FROM Features f, Comments c WHERE c.CommentID = f.CommentID "
 basic_af = "SELECT * FROM Comments c WHERE CommentID > 1"
-n_chars = "SELECT Agree, PhD, Jaccard, EditorSelection FROM Features c WHERE CommentID > 1"
+n_chars = "SELECT Agree, PhD, Jaccard, n_chars, EditorSelection FROM Features c "
 basic_af = "SELECT * FROM Features "
 
 #Initialize features model:
@@ -18,7 +18,7 @@ cf = CommentFeatures("../john_test_5.db")
 cf.limitNumComments(15000) #50,000 samples will be our default "small" size
 cf.setEditorPicksProportion(0.5, 0.5) #Start with a 50/50 editor/non-editor split
 cf.setVerbose()
-
+cf.setFeaturesQuery(n_chars)
 
 #Choose classifier: (Choose ONE)
 #cf.setLinearSVM()
