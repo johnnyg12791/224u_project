@@ -193,8 +193,8 @@ class CommentFeatures():
 			#blanks_flag = 0
 			for i, col in enumerate(self.c.description):
 				val = row[i]
-				if val == None: ##TODO: Remove once no longer adding null features
-					val = 0
+				#if val == None: ##TODO: Remove once no longer adding null features
+				#	val = 0
 					#blanks_flag = 1 #Hackey way to screen out "incompletely featured" comments
 				#Append EditorSelection to golds:
 				if col[0] == "EditorSelection":
@@ -212,8 +212,8 @@ class CommentFeatures():
 				commentText = feature_dict["CommentText"]
 
 			#if blanks_flag == 0:
-			#	X.append(feature_dict)
-			#	Y.append(gold)
+			X.append(feature_dict)
+			Y.append(gold)
 			#Check cutoff:
 			num_comments += 1
 			if num_comments > cutoff: break 
@@ -332,6 +332,7 @@ class CommentFeatures():
 			print "Selected comment features"
  
 		#Vectorize comments; this would be the place to apply feature functions as desired
+
 		self.vectorizer = fe.DictVectorizer()
 		self.vectorizer.fit(self.t_x + self.d_x)
 

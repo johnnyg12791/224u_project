@@ -22,8 +22,8 @@ cf.setFeaturesQuery(n_chars)
 
 #Choose classifier: (Choose ONE)
 #cf.setLinearSVM()
-cf.setSGD()
-#cf.setKernelSVM("poly")
+#cf.setSGD()
+cf.setKernelSVM("poly")
 #cf.setRandomForest()
 
 #Query the database to make feature vectors/clean data:
