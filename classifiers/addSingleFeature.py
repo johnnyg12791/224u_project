@@ -60,9 +60,12 @@ def add_similarity_metric(database, feature_name, feature_fct):
         #article_text = get_article_text_from_comment(cursor, comment_id)
         article_text = url_to_article[str(id_to_url[comment_id])]
         similarity = feature_fct(word_vec(comment_text), word_vec(article_text))
+        #print similarity
+        #print jaccard_sim(word_vec(comment_text), word_vec(article_text))
+        #raw_input("")
+        insert_statement = ("UPDATE Features SET %s = %f WHERE CommentID = %d" % (feature_name, similarity, comment_id))
+        cursor.execute(insert_statement)
 
-        #insert_statement = ("UPDATE Features SET %s= %f WHERE CommentID = %d" % (feature_name, similarity, comment_id))
-        #cursor.execute(insert_statement)
         if counter % 1000 == 0 :
             print counter, " took ", time.time() - start
             database.commit()

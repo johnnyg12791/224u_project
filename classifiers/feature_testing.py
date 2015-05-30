@@ -10,7 +10,7 @@ nltk_query = "SELECT f.*, c.TrainTest, c.CommentText FROM Features f, Comments c
 basic_af = "SELECT * FROM Features "
 
 #Initialize features model:
-cf = CommentFeatures()
+cf = CommentFeatures("../john_test_5.db")
 
 #Set cutoff on review count, verbosity, features query:
 cf.limitNumComments(50000) #50,000 samples will be our default "small" size
