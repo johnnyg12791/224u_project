@@ -10,7 +10,9 @@ import csv
 import scipy.sparse as sps 
 from matplotlib.mlab import PCA as mlabPCA
 import heapq
-
+import sklearn
+import string
+import time
 
 
 class CommentFeatures():
@@ -36,7 +38,8 @@ class CommentFeatures():
 		self.num_comments = float("inf")
 		self.numInTrain = 0
 		self.numInDev = 0
-		self.proportionEditorPicks = .5 #Artificially grab more editor pick reviews
+		self.proportionEditorPicksTrain = .5 #Artificially grab more editor pick reviews
+		self.proportionEditorPicksDev = .5
 		#Feature vectors x and "editor results" y for train and dev:
 		#(not even going to touch test-- let's leave it clean!)
 		#Train:
@@ -72,8 +75,12 @@ class CommentFeatures():
 		self.verbose = verbose 
 
 	#Set the artificial number of editor picks to be "proportion"
-	def setEditorPicksProportion(self, proportion):
-		self.proportionEditorPicks = proportion
+	def setEditorPicksProportion(self, train_proportion, dev_proportion = -1):
+		self.proportionEditorPicksTrain = train_proportion
+		if dev_proportion == -1:
+			self.proportionEditorPicksDev = train_proportion
+		else:
+			self.proportionEditorPicksDev = dev_proportion 
 
 #########Raw feature vector creation: ######################################
 
@@ -119,7 +126,7 @@ class CommentFeatures():
 			self.t_y.append(gold)
 			if returnCommentIDs: t_commentIDs.append(cID)
 			num_grabbed += 1
-			if num_grabbed > self.trainCutoffNum * self.proportionEditorPicks: break
+			if num_grabbed > self.trainCutoffNum * self.proportionEditorPicksTrain: break
 		#Add 75% non-editor picks
 		for cID, cText, gold in self.c.execute (self.trainSelectQueryNonEditorPick):
 			t_x.append(cText)
@@ -134,7 +141,7 @@ class CommentFeatures():
 			d_x.append(cText)
 			self.d_y.append(gold)
 			if returnCommentIDs: d_commentIDs.append(cID)
-			if num_grabbed > self.trainCutoffNum * self.proportionEditorPicks: break
+			if num_grabbed > self.trainCutoffNum * self.proportionEditorPicksDev: break
 		#Add 75% non-editor picks
 		for cID, cText, gold in self.c.execute (self.devSelectQueryNonEditorPick):
 			d_x.append(cText)
@@ -189,7 +196,7 @@ class CommentFeatures():
 		num_comments = 0
 		for row in self.c.execute(query):
 			feature_dict = {}
-			blanks_flag = 0
+			#blanks_flag = 0
 			for i, col in enumerate(self.c.description):
 				val = row[i]
 				if val == None: ##TODO: Remove once no longer adding null features
@@ -210,9 +217,9 @@ class CommentFeatures():
 				#Precondition: must have selected CommentText
 				commentText = feature_dict["CommentText"]
 
-			if blanks_flag == 0:
-				X.append(feature_dict)
-				Y.append(gold)
+			#if blanks_flag == 0:
+			#	X.append(feature_dict)
+			#	Y.append(gold)
 			#Check cutoff:
 			num_comments += 1
 			if num_comments > cutoff: break 
@@ -232,7 +239,7 @@ class CommentFeatures():
 
 		#Train, editor
 		train_editorX, Y, bX = self.makeFeatureDict(
-			self.trainSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicks)
+			self.trainSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicksTrain)
 		self.t_x.extend(train_editorX)
 		self.t_y.extend(Y)
 		t_bow_X.extend(bX)
@@ -242,7 +249,7 @@ class CommentFeatures():
 
 		#Train, non-editor
 		train_noneditorX, Y, bX = self.makeFeatureDict(
-			self.trainSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicks))
+			self.trainSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicksTrain))
 		self.t_x.extend(train_noneditorX)
 		self.t_y.extend(Y)
 		t_bow_X.extend(bX)
@@ -253,7 +260,7 @@ class CommentFeatures():
 
 		#Dev, editor
 		dev_editorX, Y, bX = self.makeFeatureDict(
-			self.devSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicks)
+			self.devSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicksDev)
 		self.d_x.extend(dev_editorX)
 		self.d_y.extend(Y)
 		d_bow_X.extend(bX)
@@ -264,7 +271,7 @@ class CommentFeatures():
 
 		#Dev, non-editor
 		dev_noneditorX, Y, bX = self.makeFeatureDict(
-			self.devSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicks))
+			self.devSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicksDev))
 		self.d_x.extend(dev_noneditorX)
 		self.d_y.extend(Y)
 		d_bow_X.extend(bX)
@@ -413,13 +420,32 @@ class CommentFeatures():
 		self.classifier = linear_model.SGDClassifier()
 		print "Using SGD classifier"
 
+	def setKernelSVM(self, kernel='rbf'):
+		#Check defaults: http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html
+		self.classifier = svm.SVC(kernel = kernel) 
+		print "Using ", kernel, " Kernel for SVM"
+
+
+
 
 ###########Classification step: ##########################################
 
 	#Method: classify
 	#Run the classifier specified under self.classifier on the train and
 	#dev data. Report the analysis.
-	def classify(self, save_file="afs"):
+	def classify(self, save_file="afs", cv_search = False):
+		if cv_search :
+			print "Starting CV Grid Search"
+			#This many params takes a long time
+			param_grid = [ {'C': [.01, .1, 1, 10], 'kernel': ['poly', 'linear', 'rbf'], 'gamma': [1e-4, 1e-3, 1e-2, 0.1]} ]
+			#See scoring : http://scikit-learn.org/stable/modules/model_evaluation.html
+			clf = sklearn.grid_search.GridSearchCV(self.classifier, param_grid, scoring='f1')
+			clf.fit(self.t_x, self.t_y)
+			params = clf.best_params_
+			#self.classifier = self.classifier(C=params['C'], kernel=params['kernel'], gamma=params['gamma'])
+			#Definitely works as below, not sure if above is correct syntax ^^
+			self.classifier = svm.SVC(C=params['C'], kernel=params['kernel'], gamma=params['gamma'])
+
 		#Fit classifier, then classify train and dev examples
 		print "Starting classifier..."
 		if self.verbose:
@@ -441,7 +467,6 @@ class CommentFeatures():
 		self.p_r_f_s(self.d_y, predict_dev)
 		print "Classification report:"
 		self.classification_report(predict_dev, self.d_y)
-
 
 
 		#Save results to CSV
@@ -490,11 +515,21 @@ class CommentFeatures():
 		if save_file == "afs":
 			save_file = "/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/results.csv"
 		with open(save_file, 'a') as results_file:
-			fields = ['f1_train', 'f1_dev', 'num_samples', 'num_features', 'classifier_type']
-			writer = csv.DictWriter(results_file, fieldnames=fields)
-			n_samples, n_features = self.t_x.shape
-			writer.writerow({'f1_train': train, 'f1_dev': dev, 
-    			'num_samples': n_samples, 'num_features': n_features, 'classifier_type': self.classifier})
+			num_total = self.trainCutoffNum
+			num_1s = num_total * self.proportionEditorPicksTrain
+
+			results_file.write(time.strftime("%Y-%m-%d %H:%M") + "\n")
+			results_file.write("Number of 1s : " + str(num_1s) + " out of " + str(num_total) + "\n")
+			results_file.write("---------------------\n")
+			results_file.write("| f1_train | f1_dev  |\n")
+			results_file.write("| " + str(round(train, 5)) + "  | " + str(round(dev, 5)) + " |\n")
+			results_file.write("---------------------\n")
+
+			results_file.write("Features = " + (',').join(self.vectorizer.get_feature_names()) + "\n")
+			results_file.write("Classifier = ")
+			results_file.write(str(self.classifier) + '\n\n')
+
+
 
 
 
