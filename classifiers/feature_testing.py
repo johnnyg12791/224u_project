@@ -10,7 +10,7 @@ nltk_query = "SELECT f.*, c.TrainTest, c.CommentText FROM Features f, Comments c
 basic_af = "SELECT * FROM Features "
 
 #Initialize features model:
-cf = CommentFeatures("../john_test_5.db")
+cf = CommentFeatures()
 
 #Set cutoff on review count, verbosity, features query:
 cf.limitNumComments(50000) #50,000 samples will be our default "small" size
@@ -19,14 +19,14 @@ cf.setVerbose()
 cf.setFeaturesQuery(basic_af)
 
 #Choose classifier: (Choose ONE)
-#cf.setLinearSVM()
-cf.setSGD()
+cf.setLinearSVM()
+#cf.setSGD()
 #cf.setRandomForest()
 
 #Query the database to make feature vectors/clean data:
 cf.featureModel()
 #cf.featuresAndCommentWordsModel()
-cf.recursiveFeatureElimination()
+#cf.recursiveFeatureElimination()
 #cf.bagOfWordsModel()
 #cf.calcPCA()
 

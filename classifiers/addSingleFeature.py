@@ -79,21 +79,23 @@ def add_similarity_metric(database, feature_name, feature_fct):
 #Includes support for using a cutoff number of reviews (defined immediately above main)
 def updated_add_similarity_metric(database, feature_name, feature_fct):
     cursor = database.cursor()
+    set_cursor = database.cursor()
     make_sure_feature_in_db(cursor, feature_name)
 
     counter = 0
-    get_fulltexts_query = "SELECT CommentID, CommentText, FullText FROM ArticleText a, Comments c WHERE c.ArticleURL=a.URL"
+    get_fulltexts_query = "SELECT c.CommentID, CommentText, FullText FROM ArticleText a, Comments c, Features f WHERE c.ArticleURL=a.URL"
     for c_id, c_text, a_text in cursor.execute(get_fulltexts_query):
         similarity = feature_fct(word_vec(c_text), word_vec(a_text))
 
-        insert_statement = ("UPDATE Features SET %s= %f WHERE CommentID = %d" % (feature_name, similarity, comment_id))
-        cursor.execute(insert_statement)
+        insert_statement = ("UPDATE Features SET %s= %f WHERE CommentID = %d" % (feature_name, similarity, c_id))
+        set_cursor.execute(insert_statement)
 
         counter += 1
         if counter % 1000 == 0:
             database.commit()
-        if counter > cutoffNum: break
+        #if counter > cutoffNum: break
 
+    set_cursor.close()
     cursor.close()
     database.commit()
 
@@ -172,7 +174,8 @@ def jaccard_similarity_skipgrams(c_text, a_text):
     #Compute Jaccard similarity of this skipgram:
     union = float(len(set(c_dict.keys()).union(set(a_dict.keys()))))
     intersect = len(set(c_dict.keys()).intersection(set(a_dict.keys())))
-    return intersect / union 
+    dist = intersect / union
+    return dist 
 
 
 def euclidean_sim(x, y):
@@ -192,7 +195,7 @@ def main():
     database.close()
 
 verbose = True 
-cutoffNum = 10
+cutoffNum = float("inf")
 if __name__ == "__main__":
     main()
 

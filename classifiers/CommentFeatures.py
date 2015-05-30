@@ -400,9 +400,9 @@ class CommentFeatures():
 
 	#Method: setLinearSVM
 	#Sets classifier to be very basic linear SVM
-	def setLinearSVM(self, C_val=1):
+	def setLinearSVM(self, C_val=.1):
 		self.classifier = svm.LinearSVC(C=C_val)
-		print "Using linear SVM with C=%.f" % C_val
+		print "Using linear SVM with C=%.3f" % C_val
 
 	def setSGD(self):
 		self.classifier = linear_model.SGDClassifier()
