@@ -7,7 +7,7 @@ KLD_query = "SELECT KLDistance, KLDistance_Nouns FROM Features f, Comments c WHE
 subj_query = "SELECT subjectivity, polarity, c.CommentID, c.EditorSelection, c.CommentText FROM Comments c, Features f WHERE c.CommentID = f.CommentID "
 jaccard_query = "SELECT jaccard, EditorSelection FROM Features c WHERE CommentID > 1 "
 nltk_query = "SELECT f.*, c.TrainTest, c.CommentText FROM Features f, Comments c WHERE c.CommentID = f.CommentID "
-basic_af = "SELECT * FROM Comments "
+basic_af = "SELECT * FROM Features "
 
 #Initialize features model:
 cf = CommentFeatures()
@@ -16,15 +16,17 @@ cf = CommentFeatures()
 cf.limitNumComments(50000) #50,000 samples will be our default "small" size
 cf.setEditorPicksProportion(.5) #Start with a 50/50 editor/non-editor split
 cf.setVerbose()
-cf.setFeaturesQuery(nltk_query)
+cf.setFeaturesQuery(basic_af)
 
 #Choose classifier: (Choose ONE)
-cf.setLinearSVM()
-#cf.setSGD()
+#cf.setLinearSVM()
+cf.setSGD()
+#cf.setRandomForest()
 
 #Query the database to make feature vectors/clean data:
 cf.featureModel()
 #cf.featuresAndCommentWordsModel()
+cf.recursiveFeatureElimination()
 #cf.bagOfWordsModel()
 #cf.calcPCA()
 

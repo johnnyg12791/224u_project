@@ -5,12 +5,14 @@ import sklearn.feature_extraction as fe
 import sklearn.metrics as me
 from sklearn import svm
 from sklearn import linear_model
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.decomposition import PCA 
 import csv
 import scipy.sparse as sps 
 from matplotlib.mlab import PCA as mlabPCA
 import heapq
-
+from sklearn.feature_selection import RFE 
+#TODO: alphabetize imports
 
 
 class CommentFeatures():
@@ -81,15 +83,6 @@ class CommentFeatures():
 	#A method which will create custom select statements from the user-entered version for
 	#editor pick and non-editor pick train and dev data.
 	def createSelectStatements(self, statement):
-		self.trainSelectQueryEditorPick =  statement + " AND c.TrainTest =1 AND c.EditorSelection = 1"
-		self.trainSelectQueryNonEditorPick = statement + " AND c.TrainTest =1 AND c.EditorSelection = 0"
-		self.devSelectQueryEditorPick = statement + " AND c.TrainTest =2 AND c.EditorSelection = 1"
-		self.devSelectQueryNonEditorPick = statement + " AND c.TrainTest =2 AND c.EditorSelection = 0"
-
-	#Method: createSelectStatments
-	#A method which will create custom select statements from the user-entered version for
-	#editor pick and non-editor pick train and dev data.
-	def createSelectStatementsNew(self, statement):
 		self.trainSelectQueryEditorPick =  statement + " WHERE TrainTest =1 AND EditorSelection = 1"
 		self.trainSelectQueryNonEditorPick = statement + " WHERE TrainTest =1 AND EditorSelection = 0"
 		self.devSelectQueryEditorPick = statement + " WHERE TrainTest =2 AND EditorSelection = 1"
@@ -247,7 +240,6 @@ class CommentFeatures():
 		self.t_y.extend(Y)
 		t_bow_X.extend(bX)
 
-
 		if self.verbose:
 			print "Created training/non-editor pick vectors"
 
@@ -287,6 +279,13 @@ class CommentFeatures():
 
 		#Fit on train
 		
+	def recursiveFeatureElimination(self):
+		print "Starting RFE..."
+		eliminator = RFE(self.classifier, 10, verbose=True)
+		eliminator.fit(self.t_x, self.t_y)
+		
+		self.t_x = eliminator.transform(self.t_x)
+		self.d_x = eliminator.transform(self.d_x)
 
 
 ################ Model Selection: ###########################
@@ -357,10 +356,6 @@ class CommentFeatures():
 		self.t_x = sps.hstack([self.t_x, bow_t_x])
 		self.d_x = sps.hstack([self.d_x, bow_d_x])
 
-		if self.verbose:
-			print "Training vector looks like:"
-			print self.t_x 
-
 	#Method: featuresAndCommentWordsModel
 	#A feature model based on extracted features + BOW on the comments.
 	def featuresAndCommentWordsModel_slow(self, tfidf=True):
@@ -413,6 +408,9 @@ class CommentFeatures():
 		self.classifier = linear_model.SGDClassifier()
 		print "Using SGD classifier"
 
+	def setRandomForest(self):
+		self.classifier = RandomForestClassifier()
+		print "Using random forest classifier"
 
 ###########Classification step: ##########################################
 
