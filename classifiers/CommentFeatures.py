@@ -32,6 +32,7 @@ class CommentFeatures():
 		#Queries to return all of training or dev data, respectively. Customize if you need other columns
 		self.selectStatement = "SELECT CommentID, CommentText, EditorSelection FROM Comments c WHERE CommentText IS NOT NULL "
 		self.trainCutoffNum = float("inf")
+		self.zeroBlanks = False #A parameter to set all null cells in table to 0
 
 		#User should provide a featureSelectQuery 
 		self.featureSelectionQuery = None
@@ -76,6 +77,9 @@ class CommentFeatures():
 	#Set verbose; note that right now this is 80% debugging output
 	def setVerbose(self, verbose=True):
 		self.verbose = verbose 
+
+	def zeroBlankColumns(self):
+		self.zeroBlanks = True
 
 	#Set the artificial number of editor picks to be "proportion"
 	def setEditorPicksProportion(self, train_proportion, dev_proportion = -1):
@@ -193,6 +197,8 @@ class CommentFeatures():
 			#blanks_flag = 0
 			for i, col in enumerate(self.c.description):
 				val = row[i]
+				if val == None and self.zeroBlanks:
+					val = 0
 				#if val == None: ##TODO: Remove once no longer adding null features
 				#	val = 0
 					#blanks_flag = 1 #Hackey way to screen out "incompletely featured" comments
@@ -431,7 +437,7 @@ class CommentFeatures():
 	#Method: classify
 	#Run the classifier specified under self.classifier on the train and
 	#dev data. Report the analysis.
-	def classify(self, save_file="afs", cv_search = False):
+	def classify(self, save_file="afs", cv_search=False):
 		if cv_search :
 			print "Starting CV Grid Search"
 			#This many params takes a long time

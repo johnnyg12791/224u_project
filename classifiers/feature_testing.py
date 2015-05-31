@@ -7,9 +7,9 @@ KLD_query = "SELECT KLDistance, KLDistance_Nouns FROM Features f, Comments c WHE
 subj_query = "SELECT subjectivity, polarity, c.CommentID, c.EditorSelection, c.CommentText FROM Comments c, Features f WHERE c.CommentID = f.CommentID "
 jaccard_query = "SELECT Jaccard, EditorSelection FROM Features c WHERE CommentID > 1 "
 nltk_query = "SELECT f.*, c.TrainTest, c.CommentText FROM Features f, Comments c WHERE c.CommentID = f.CommentID "
-basic_af = "SELECT * FROM Comments c WHERE CommentID > 1"
 n_chars = "SELECT Agree, PhD, Jaccard, n_chars, EditorSelection FROM Features c "
 basic_af = "SELECT * FROM Features "
+overlap_features = "SELECT skipgrams_2, skipgrams_3, Jaccard, Cosine, n_chars, n_words, n_upper, subjectivity, EditorSelection FROM Features "
 
 #Initialize features model:
 cf = CommentFeatures()
@@ -18,17 +18,15 @@ cf = CommentFeatures()
 cf.limitNumComments(15000) #50,000 samples will be our default "small" size
 cf.setEditorPicksProportion(0.5, 0.5) #Start with a 50/50 editor/non-editor split
 cf.setVerbose()
-cf.setFeaturesQuery(n_chars)
+cf.setFeaturesQuery(overlap_features)
+cf.zeroBlankColumns()
 
 #Choose classifier: (Choose ONE)
-<<<<<<< HEAD
-cf.setLinearSVM()
+#<<<<<<< HEAD
 #cf.setSGD()
-=======
 #cf.setLinearSVM()
-#cf.setSGD()
 cf.setKernelSVM("poly")
->>>>>>> f951cfc8eebf6453ec71f914019c60cdbcc71c8a
+#>>>>>>> f951cfc8eebf6453ec71f914019c60cdbcc71c8a
 #cf.setRandomForest()
 
 #Query the database to make feature vectors/clean data:
@@ -39,9 +37,9 @@ cf.featureModel()
 #cf.calcPCA()
 
 #Perform the classification step, show metrics:
-cf.classify("results.csv", cv_search=True)
+cf.classify("results.csv", cv_search=False)
 #Can only use this with a Linear Kernel
-#cf.topNCoefficients(10) #Check to see which coefficients are assigned highest classification weight
+cf.topNCoefficients(10) #Check to see which coefficients are assigned highest classification weight
 
 #Close up the database, cursors, etc
 cf.close()

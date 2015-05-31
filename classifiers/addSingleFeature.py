@@ -164,6 +164,9 @@ def jaccard_sim(x, y):
     intersection = len(set(x).intersection(set(y)))
     return intersection/union
 
+def KLDistance(x, y):
+
+
 #Method: jaccard_similarity_skipgrams
 #Adds "skipgrams"-- like a bigram, but with up to k words separating them--
 #to the database, under the jaccard similarity metric.
@@ -207,7 +210,7 @@ def main():
     #add_feature_to_database(database, "IAmA", ["I'm a", "I am a", "I am an", "I'm an"])
     #add_feature_to_database(database, "Europe")
 
-    add_multiple_similarity_metrics(database, "skipgrams_2", jaccard_similarity_skipgrams)
+    add_multiple_similarity_metrics(database)
     #add_similarity_metric(database, "Cosine", cosine_sim)
     #add_similarity_metric(database, "Jaccard", jaccard_sim)
     #add_similarity_metric(database, "Euclidean", euclidean_sim)
