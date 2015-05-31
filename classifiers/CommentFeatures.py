@@ -18,6 +18,8 @@ from sklearn.feature_selection import RFE
 import distributedwordreps
 from sklearn.neural_network import BernoulliRBM
 from sklearn.pipeline import Pipeline
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
 #TODO: alphabetize imports
 
 
@@ -56,6 +58,10 @@ class CommentFeatures():
 		#Dev:
 		self.d_x = []
 		self.d_y = []
+
+		#Vectors to store CommentIDs (for use in misclassification analysis, etc)
+		self.t_IDs = []
+		self.d_IDs = []
 
 		self.BOWvectorizer = None #A standin for "using bag of words"
 		self.save_file="afs"
@@ -219,6 +225,7 @@ class CommentFeatures():
 		X = []
 		bow_X = []
 		Y = []
+		ID_vec = []
 		num_comments = 0
 		for row in self.c.execute(query):
 			feature_dict = {}
@@ -235,7 +242,9 @@ class CommentFeatures():
 					gold = row[i]
 				elif col[0] == "CommentText":
 					bow_X.append(val)
-				elif col[0] == "CommentID" or col[0] == "TrainTest":
+				elif col[0] == "CommentID":
+					ID_vec.append(val)
+				elif col[0] == "TrainTest":
 					continue
 				#Add columns to features:
 				else:
@@ -251,7 +260,7 @@ class CommentFeatures():
 			#Check cutoff:
 			num_comments += 1
 			if num_comments > cutoff: break 
-		return (X, Y, bow_X)
+		return (X, Y, bow_X, ID_vec)
 
 
 	#Method: getCommentFeatures
@@ -266,42 +275,46 @@ class CommentFeatures():
 		d_bow_X = []
 
 		#Train, editor
-		train_editorX, Y, bX = self.makeFeatureDict(
+		train_editorX, Y, bX, ids = self.makeFeatureDict(
 			self.trainSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicksTrain)
 		self.t_x.extend(train_editorX)
 		self.t_y.extend(Y)
 		t_bow_X.extend(bX)
+		self.t_IDs.extend(ids)
 
 		if self.verbose:
 			print "Created training/editor pick vectors"
 
 		#Train, non-editor
-		train_noneditorX, Y, bX = self.makeFeatureDict(
+		train_noneditorX, Y, bX, ids = self.makeFeatureDict(
 			self.trainSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicksTrain))
 		self.t_x.extend(train_noneditorX)
 		self.t_y.extend(Y)
 		t_bow_X.extend(bX)
+		self.t_IDs.extend(ids)
 
 		if self.verbose:
 			print "Created training/non-editor pick vectors"
 
 		#Dev, editor
-		dev_editorX, Y, bX = self.makeFeatureDict(
+		dev_editorX, Y, bX, ids = self.makeFeatureDict(
 			self.devSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicksDev)
 		self.d_x.extend(dev_editorX)
 		self.d_y.extend(Y)
 		d_bow_X.extend(bX)
+		self.d_IDs.extend(ids)
 
 
 		if self.verbose:
 			print "Created dev/editor pick vectors"
 
 		#Dev, non-editor
-		dev_noneditorX, Y, bX = self.makeFeatureDict(
+		dev_noneditorX, Y, bX, ids = self.makeFeatureDict(
 			self.devSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicksDev))
 		self.d_x.extend(dev_noneditorX)
 		self.d_y.extend(Y)
 		d_bow_X.extend(bX)
+		self.d_IDs.extend(ids)
 
 		if self.verbose:
 			print "Created dev/non-editor pick vectors"
@@ -499,7 +512,7 @@ class CommentFeatures():
 		rbm = BernoulliRBM(random_state=0, verbose=True)
 		rbm.learning_rate = 0.06
 		rbm.n_iter = 20
-		rbm.n_components = 100
+		rbm.n_components = 50
 		#Make classifier a pipeline
 		self.classifier = Pipeline(steps=[('rbm', rbm), ('logistic', logistic)])
 
@@ -573,6 +586,20 @@ class CommentFeatures():
 		print "Precision = %.3f, recall = %.3f, f1 = %.3f, support = %.3f" %(p[0], r[0], f[0], s[0])
 		return p, r, f, s 
 
+	def visualize_tsne(self):
+		print "Preparing TSNE visualization..."
+		#X_array = self.t_x.toarray()
+		tsne_model = TSNE()
+		tsne_x = tsne_model.fit_transform(self.t_x)
+		print "Tsne shape:"
+		print tsne_x.shape
+		colors = []
+		for y in self.t_y:
+			if y == 1:
+				colors.append('r')
+			else: colors.append('g')
+		plt.scatter(tsne_x[:, 0], tsne_x[:, 1], c=colors)
+		plt.show()
 
 	def save_results(self, train, dev):
 		if self.save_file == "afs":
@@ -592,6 +619,33 @@ class CommentFeatures():
 			results_file.write("Classifier = ")
 			results_file.write(str(self.classifier) + '\n\n')
 
+	#Method: viewMisclassifiedReviews
+	#A method that will print out reviews that were misclassified.
+	def viewMisclassifiedReviews(self, numToShow=10, allFromDev=True):
+		#View mislcassified reviews:
+		predictions_dev = self.classifier.predict(self.d_x)
+		false_pos = 0
+		false_neg = 0
+		for i in range(len(predictions_dev)):
+			prediction = predictions_dev[i]
+			gold = self.d_y[i]
+			#If prediction != gold, review was misclassified:
+			editorPickOrNah = ["Naaht an editor pick", "editor pick"]
+			if prediction != gold and prediction == 1:
+				c_id = self.d_IDs[i]
+				print "Comment %d misclassified as %s:" %(c_id, editorPickOrNah[prediction])
+				text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ? ORDER BY RANDOM()", (c_id,)).fetchone()
+				print text
+				print "\n"
+				false_neg += 1
+			if prediction != gold and prediction == 0:
+				c_id = self.d_IDs[i]
+				print "Comment %d misclassified as %s:" %(c_id, editorPickOrNah[prediction])
+				text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ? ORDER BY RANDOM()", (c_id,)).fetchone()
+				print text
+				print "\n"
+				false_neg += 1
+			if false_neg + false_pos > numToShow: break
 
 
 

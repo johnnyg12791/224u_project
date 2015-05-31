@@ -9,7 +9,7 @@ jaccard_query = "SELECT Jaccard, EditorSelection FROM Features c WHERE CommentID
 nltk_query = "SELECT f.*, c.TrainTest, c.CommentText FROM Features f, Comments c WHERE c.CommentID = f.CommentID "
 n_chars = "SELECT Agree, PhD, Jaccard, n_chars, EditorSelection FROM Features c "
 basic_af = "SELECT * FROM Features "
-overlap_features = "SELECT CommentText, skipgrams_2, skipgrams_3, Jaccard, Cosine, n_chars, n_words, n_upper, subjectivity, f.EditorSelection FROM Features f, Comments c WHERE f.CommentID=c.CommentID "
+overlap_features = "SELECT skipgrams_2, skipgrams_3, Jaccard, Cosine, n_chars, n_words, n_upper, subjectivity, EditorSelection FROM Features "
 everything_for_bow = "SELECT f.*, c.CommentText FROM Comments c, Features f, Articles a WHERE c.CommentID = f.CommentID AND c.ArticleURL = a.URL AND a.Section = 'World' "
 nn_features = "SELECT num_1_letter_words, skipgrams_3, n_sentences, EditorSelection FROM Features"
 
@@ -17,7 +17,7 @@ nn_features = "SELECT num_1_letter_words, skipgrams_3, n_sentences, EditorSelect
 cf = CommentFeatures()
 
 ##############Set cutoff on review count, verbosity, features query:
-cf.limitNumComments(50000) #50,000 samples will be our default "small" size
+cf.limitNumComments(500) #50,000 samples will be our default "small" size
 cf.setEditorPicksProportion(0.5, 0.5) #Start with a 50/50 editor/non-editor split
 cf.setVerbose()
 cf.setFeaturesQuery(everything_for_bow)
@@ -27,7 +27,7 @@ cf.zeroBlankColumns()
 
 ##############Query the database to make feature vectors/clean data:
 #cf.featureModel()
-cf.featuresAndCommentWordsModel(maxNgram=1)
+cf.featuresAndCommentWordsModel(maxNgram=2)
 #cf.recursiveFeatureElimination()
 #cf.bagOfWordsModel()
 #cf.calcPCA()
@@ -35,18 +35,20 @@ cf.featuresAndCommentWordsModel(maxNgram=1)
 ##############Choose classifier: (Choose ONE)
 #<<<<<<< HEAD
 #cf.setSGD()
-#cf.setLinearSVM(C_val=.5)
+cf.setLinearSVM(C_val=.5)
 #cf.setKernelSVM("poly")
 #cf.useCVSearch()
 #>>>>>>> f951cfc8eebf6453ec71f914019c60cdbcc71c8a
 #cf.setRandomForest()
-cf.useNeuralNetwork() #Recommend: low # features
+#cf.useNeuralNetwork() #Recommend: low # features
 
 
 ##############Perform the classification step, show metrics:
 cf.classify()
+#cf.visualize_tsne()
 #Can only use this with a Linear Kernel
 cf.topNCoefficients(30) #Check to see which coefficients are assigned highest classification weight
+cf.viewMisclassifiedReviews()
 
 ##############Close up the database, cursors, etc
 cf.close()
