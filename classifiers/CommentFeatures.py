@@ -16,6 +16,8 @@ import string
 import time
 from sklearn.feature_selection import RFE 
 import distributedwordreps
+from sklearn.neural_network import BernoulliRBM
+from sklearn.pipeline import Pipeline
 #TODO: alphabetize imports
 
 
@@ -488,8 +490,19 @@ class CommentFeatures():
 
 	#Method: useNeuralNetwork
 	#This method will train and run a shallow neural network.
+	#NOTE: Pipeline syntax copied directly from:
+	#http://scikit-learn.org/stable/auto_examples/neural_networks/plot_rbm_logistic_classification.html#example-neural-networks-plot-rbm-logistic-classification-py
 	def useNeuralNetwork(self):
-		self.classifier = distributedwordreps.ShallowNeuralNetwork(input_dim=self.t_x.shape[1], hidden_dim=10, output_dim=1)
+		#Set up logistic regression unit:
+		logistic = linear_model.LogisticRegression()
+		#Set up neural net unit; tune its parameters ##TODO: grid search for params
+		rbm = BernoulliRBM(random_state=0, verbose=True)
+		rbm.learning_rate = 0.06
+		rbm.n_iter = 20
+		rbm.n_components = 100
+		#Make classifier a pipeline
+		self.classifier = Pipeline(steps=[('rbm', rbm), ('logistic', logistic)])
+
 
 ###########Classification step: ##########################################
 

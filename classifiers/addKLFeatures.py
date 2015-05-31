@@ -92,7 +92,7 @@ def KL_divergence(comment_text, article_text, a_url):
 
 
 ##DB setup:
-db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/may31.db")
+db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/may31_day.db")
 loop_cursor = db.cursor()
 setter_cursor = db.cursor()
 count = 0

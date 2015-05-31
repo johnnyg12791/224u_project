@@ -449,7 +449,8 @@ class ShallowNeuralNetwork:
         self.iweights += alpha * outer(self.input, herr[:-1]) # ignore the bias
         return np.sum(0.5 * (labels-self.output)**2)
 
-    def train(self, training_data, maxiter=5000, alpha=0.05, epsilon=1.5e-8, display_progress=False):       
+ #   def train(self, training_data, maxiter=5000, alpha=0.05, epsilon=1.5e-8, display_progress=False):       
+    def fit(self, training_data, maxiter=5000, alpha=0.05, epsilon=1.5e-8, display_progress=False):       
         iteration = 0
         error = sys.float_info.max
         while error > epsilon and iteration < maxiter:            
