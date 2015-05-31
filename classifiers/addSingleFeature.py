@@ -78,17 +78,21 @@ def updated_add_similarity_metric(database, feature_name, feature_fct):
     make_sure_feature_in_db(cursor, feature_name)
 
     counter = 0
-    get_fulltexts_query = "SELECT CommentID, CommentText, FullText FROM ArticleText a, Comments c WHERE c.ArticleURL=a.URL"
-    for c_id, c_text, a_text in cursor.execute(get_fulltexts_query):
-        similarity = feature_fct(word_vec(c_text), word_vec(a_text))
 
-        insert_statement = ("UPDATE Features SET %s= %f WHERE CommentID = %d" % (feature_name, similarity, comment_id))
+    get_fulltexts_query = "SELECT CommentID, CommentText, FullText FROM ArticleText a, Comments c WHERE c.ArticleURL=a.URL"
+    comments_data = [(c_id, c_text, a_text) for (c_id, c_text, a_text) in cursor.execute(get_fulltexts_query)]
+
+    for c_id, c_text, a_text in comments_data:
+        feature_value = feature_fct(word_vec(c_text), word_vec(a_text))
+
+        insert_statement = ("UPDATE Features SET %s = %f WHERE CommentID = %d" % (feature_name, feature_value, c_id))
         cursor.execute(insert_statement)
 
         counter += 1
         if counter % 1000 == 0:
             database.commit()
-        if counter > cutoffNum: break
+            print counter
+        #if counter > cutoffNum: break
 
     cursor.close()
     database.commit()
@@ -118,12 +122,8 @@ def word_vec(text):
 #Given a CommentID and Database cusor, 
 #uses a sql query to get the article text from Article/ArticleText tables
 def get_article_text_from_comment(cursor, comment_id):
-    stmt = "SELECT FullText From ArticleText AS A JOIN Comments AS C ON A.URL=C.ArticleURL WHERE C.CommentID = "
-    stmt += str(comment_id)
-    text = [text for text in cursor.execute(stmt)][0][0]
-    text = text.replace(u"\xc3", "")
-    return text
-
+    stmt = "SELECT FullText From ArticleText AS A JOIN Comments AS C ON A.URL=C.ArticleURL WHERE C.CommentID = " + str(comment_id)
+    return [text for text in cursor.execute(stmt)][0][0]
 
 #remove stop words?
 def cosine_sim(x, y):
@@ -144,6 +144,30 @@ def jaccard_sim(x, y):
     union = float(len(set(x).union(set(y))))
     intersection = len(set(x).intersection(set(y)))
     return intersection/union
+
+#def jaccard_no_stop(x,y):
+#    x_set = 
+
+
+
+def n_char_word_range(c_text, a_text):
+    low = 16
+    high = 20
+    n_words_in_range = 0
+    for word in c_text:
+        if(len(word) >= low and len(word) <= high):
+            n_words_in_range += 1
+    
+    #print n_words_in_range
+    return n_words_in_range
+
+
+#This compares the size of the comment to the size of the article (roughly: word count)
+def size_compared_to_article(c_text, a_text):
+    return float(len(c_text)+1)/float(len(a_text)+1)
+
+
+
 
 #Method: jaccard_similarity_skipgrams
 #Adds "skipgrams"-- like a bigram, but with up to k words separating them--
@@ -175,12 +199,21 @@ def euclidean_sim(x, y):
     pass
 
 
+def ends_with_question(a_text, c_text):
+    if c_text[-1] == "?" :
+        return 1.0
+    else :
+        return 0.0
+
+
 def main():
     database = sqlite3.connect(sys.argv[1])
     #add_feature_to_database(database, "IAmA", ["I'm a", "I am a", "I am an", "I'm an"])
     #add_feature_to_database(database, "Europe")
 
-    updated_add_similarity_metric(database, "skipgrams_2", jaccard_similarity_skipgrams)
+    updated_add_similarity_metric(database, "size_compared_to_article", n_char_word_range)
+
+    #updated_add_similarity_metric(database, "skipgrams_2", jaccard_similarity_skipgrams)
     #add_similarity_metric(database, "Cosine", cosine_sim)
     #add_similarity_metric(database, "Jaccard", jaccard_sim)
     #add_similarity_metric(database, "Euclidean", euclidean_sim)
@@ -188,7 +221,7 @@ def main():
     database.close()
 
 verbose = True 
-cutoffNum = 10
+#cutoffNum = 10
 if __name__ == "__main__":
     main()
 

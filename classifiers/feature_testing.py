@@ -8,14 +8,14 @@ subj_query = "SELECT subjectivity, polarity, c.CommentID, c.EditorSelection, c.C
 jaccard_query = "SELECT Jaccard, EditorSelection FROM Features c WHERE CommentID > 1 "
 nltk_query = "SELECT f.*, c.TrainTest, c.CommentText FROM Features f, Comments c WHERE c.CommentID = f.CommentID "
 basic_af = "SELECT * FROM Comments c WHERE CommentID > 1"
-n_chars = "SELECT Agree, PhD, Jaccard, n_chars, EditorSelection FROM Features c "
+n_chars = "SELECT Jaccard, n_sentences, avg_word_len, n_questions, EditorSelection FROM Features c "
 basic_af = "SELECT * FROM Features "
 
 #Initialize features model:
 cf = CommentFeatures("../john_test_5.db")
 
 #Set cutoff on review count, verbosity, features query:
-cf.limitNumComments(15000) #50,000 samples will be our default "small" size
+cf.limitNumComments(100000) #50,000 samples will be our default "small" size
 cf.setEditorPicksProportion(0.5, 0.5) #Start with a 50/50 editor/non-editor split
 cf.setVerbose()
 cf.setFeaturesQuery(n_chars)
@@ -23,8 +23,8 @@ cf.setFeaturesQuery(n_chars)
 #Choose classifier: (Choose ONE)
 #cf.setLinearSVM()
 #cf.setSGD()
-cf.setKernelSVM("poly")
-#cf.setRandomForest()
+#cf.setKernelSVM("rbf")
+cf.setRandomForest()
 
 #Query the database to make feature vectors/clean data:
 cf.featureModel()
@@ -34,7 +34,7 @@ cf.featureModel()
 #cf.calcPCA()
 
 #Perform the classification step, show metrics:
-cf.classify("results.csv", cv_search=True)
+cf.classify("results.csv", cv_search=False)
 #Can only use this with a Linear Kernel
 #cf.topNCoefficients(10) #Check to see which coefficients are assigned highest classification weight
 

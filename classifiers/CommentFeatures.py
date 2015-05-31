@@ -458,11 +458,13 @@ class CommentFeatures():
 		print "Training accuracy:"
 		t_acc = self.f1_accuracy(predict_train, self.t_y)
 		self.p_r_f_s(self.t_y, predict_train)
+
 		print "Classification report:"
 		self.classification_report(predict_train, self.t_y)
 		print "Dev accuracy:"
 		d_acc = self.f1_accuracy(predict_dev, self.d_y)
 		self.p_r_f_s(self.d_y, predict_dev)
+		
 		print "Classification report:"
 		self.classification_report(predict_dev, self.d_y)
 
