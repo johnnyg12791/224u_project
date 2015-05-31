@@ -11,40 +11,43 @@ n_chars = "SELECT Agree, PhD, Jaccard, n_chars, EditorSelection FROM Features c 
 basic_af = "SELECT * FROM Features "
 overlap_features = "SELECT CommentText, skipgrams_2, skipgrams_3, Jaccard, Cosine, n_chars, n_words, n_upper, subjectivity, f.EditorSelection FROM Features f, Comments c WHERE f.CommentID=c.CommentID "
 everything_for_bow = "SELECT f.*, c.CommentText FROM Comments c, Features f WHERE c.CommentID = f.CommentID "
+nn_features = "SELECT num_1_letter_words, skipgrams_3, n_sentences, EditorSelection FROM Features"
 
-#Initialize features model:
+##############Initialize features model:
 cf = CommentFeatures()
 
-#Set cutoff on review count, verbosity, features query:
-cf.limitNumComments(50000) #50,000 samples will be our default "small" size
+##############Set cutoff on review count, verbosity, features query:
+cf.limitNumComments(500) #50,000 samples will be our default "small" size
 cf.setEditorPicksProportion(0.5, 0.5) #Start with a 50/50 editor/non-editor split
 cf.setVerbose()
-cf.setFeaturesQuery(everything_for_bow)
+cf.setFeaturesQuery(nn_features)
 cf.zeroBlankColumns()
 #cf.preprocessText()
 #cf.setResultsFile("results.csv") ##JOHN-- pulled this out of "classify"
 
-#Choose classifier: (Choose ONE)
-#<<<<<<< HEAD
-#cf.setSGD()
-cf.setLinearSVM(C_val=.5)
-#cf.setKernelSVM("poly")
-#cf.useCVSearch()
-#>>>>>>> f951cfc8eebf6453ec71f914019c60cdbcc71c8a
-#cf.setRandomForest()
-
-#Query the database to make feature vectors/clean data:
-#cf.featureModel()
-cf.featuresAndCommentWordsModel(maxNgram=2)
+##############Query the database to make feature vectors/clean data:
+cf.featureModel()
+#cf.featuresAndCommentWordsModel(maxNgram=1)
 #cf.recursiveFeatureElimination()
 #cf.bagOfWordsModel()
 #cf.calcPCA()
 
-#Perform the classification step, show metrics:
+##############Choose classifier: (Choose ONE)
+#<<<<<<< HEAD
+#cf.setSGD()
+#cf.setLinearSVM(C_val=.5)
+#cf.setKernelSVM("poly")
+#cf.useCVSearch()
+#>>>>>>> f951cfc8eebf6453ec71f914019c60cdbcc71c8a
+#cf.setRandomForest()
+cf.useNeuralNetwork() #Recommend: low # features
+
+
+##############Perform the classification step, show metrics:
 cf.classify()
 #Can only use this with a Linear Kernel
 cf.topNCoefficients(30) #Check to see which coefficients are assigned highest classification weight
 
-#Close up the database, cursors, etc
+##############Close up the database, cursors, etc
 cf.close()
 

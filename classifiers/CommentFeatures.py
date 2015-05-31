@@ -15,6 +15,7 @@ import sklearn
 import string
 import time
 from sklearn.feature_selection import RFE 
+import distributedwordreps
 #TODO: alphabetize imports
 
 
@@ -449,20 +450,31 @@ class CommentFeatures():
 		self.classifier = svm.LinearSVC(C=C_val)
 		print "Using linear SVM with C=%.3f" % C_val
 
+	#Method: setSGD
+	#Set classifier to be SGD, with default settings
 	def setSGD(self):
 		self.classifier = linear_model.SGDClassifier()
 		print "Using SGD classifier"
 
+	#Method: setKernalSVM
+	#Set self.classifier to be SVM with kernel as specified
 	def setKernelSVM(self, kernel='rbf'):
 		#Check defaults: http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html
 		self.classifier = svm.SVC(kernel = kernel) 
 		print "Using ", kernel, " Kernel for SVM"
 
+	#Method: setRandomForest
+	#NOTE: this has not been debugged yet; it wants dense data representation,
+	#not our CSR sparse matrices
 	def setRandomForest(self):
 		self.classifier = RandomForestClassifier()
 		print "Using random forest classifier"
 
-	def useCVSearch():
+	#Method: useCVSearch
+	#Leverage sklearn's GridSearch platform to customize parameters for
+	#an SVC. Note that a consequence of calling this method is setting self.classifier
+	#to be the SVC with found parameters.
+	def useCVSearch(self):
 		print "Starting CV Grid Search"
 		#This many params takes a long time
 		param_grid = [ {'C': [.01, .1, 1, 10], 'kernel': ['poly', 'linear', 'rbf'], 'gamma': [1e-4, 1e-3, 1e-2, 0.1]} ]
@@ -473,6 +485,11 @@ class CommentFeatures():
 		#self.classifier = self.classifier(C=params['C'], kernel=params['kernel'], gamma=params['gamma'])
 		#Definitely works as below, not sure if above is correct syntax ^^
 		self.classifier = svm.SVC(C=params['C'], kernel=params['kernel'], gamma=params['gamma'])
+
+	#Method: useNeuralNetwork
+	#This method will train and run a shallow neural network.
+	def useNeuralNetwork(self):
+		self.classifier = distributedwordreps.ShallowNeuralNetwork(input_dim=self.t_x.shape[1], hidden_dim=10, output_dim=1)
 
 ###########Classification step: ##########################################
 

@@ -6,7 +6,7 @@ from collections import defaultdict
 
 #Method: makeWordLengthBuckets
 #Note: heavily borrowing from Mark's "features.py"; steamlined to eliminate
-#computation of NLTK features
+#computation of additional NLTK features; do setting inside function
 def makeWordLengthBuckets(text, c_id):
 	#Clean the text:
 	clean_text = re.sub(ur'[!\?\.\,-_()\[\]\"\'\%0123456789]', '', text)
@@ -37,7 +37,7 @@ def makeWordLengthBuckets(text, c_id):
 	features['perc_10-14_letter_words'] = features['num_10-14_letter_words'] / num_words
 	features['perc_15plus_letter_words'] = features['num_15plus_letter_words'] / num_words
 
-
+	#Note: setting assumes you have already configured your table to have these buckets
 	setter_cursor.execute("UPDATE Features SET num_1_letter_words = ?, num_2_5_letter_words = ?, num_6_9_letter_words = ?, num_10_14_letter_words =?, num_15plus_letter_words = ? WHERE CommentID=?",
 		(features['num_1_letter_words'], features['num_2-5_letter_words'], features['num_6-9_letter_words'], features['num_10-14_letter_words'], features['num_15plus_letter_words'], c_id))
 	setter_cursor.execute("UPDATE Features SET perc_1_letter_words = ?, perc_2_5_letter_words = ?, perc_6_9_letter_words = ?, perc_10_14_letter_words =?, perc_15plus_letter_words = ? WHERE CommentID=?",
