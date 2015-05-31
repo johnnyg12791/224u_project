@@ -16,7 +16,7 @@ everything_for_bow = "SELECT f.*, c.CommentText FROM Comments c, Features f WHER
 cf = CommentFeatures()
 
 #Set cutoff on review count, verbosity, features query:
-cf.limitNumComments(500) #50,000 samples will be our default "small" size
+cf.limitNumComments(50000) #50,000 samples will be our default "small" size
 cf.setEditorPicksProportion(0.5, 0.5) #Start with a 50/50 editor/non-editor split
 cf.setVerbose()
 cf.setFeaturesQuery(everything_for_bow)
@@ -35,7 +35,7 @@ cf.setLinearSVM(C_val=.5)
 
 #Query the database to make feature vectors/clean data:
 #cf.featureModel()
-cf.featuresAndCommentWordsModel(maxNgram=1)
+cf.featuresAndCommentWordsModel(maxNgram=2)
 #cf.recursiveFeatureElimination()
 #cf.bagOfWordsModel()
 #cf.calcPCA()
