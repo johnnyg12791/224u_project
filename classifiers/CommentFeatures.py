@@ -621,7 +621,7 @@ class CommentFeatures():
 
 	#Method: viewMisclassifiedReviews
 	#A method that will print out reviews that were misclassified.
-	def viewMisclassifiedReviews(self, numToShow=10, allFromDev=True):
+	def viewMisclassifiedReviews(self, numToShow=10, allFromDev=True, showFalseNegs=True, showFalsePos=True):
 		#View mislcassified reviews:
 		predictions_dev = self.classifier.predict(self.d_x)
 		false_pos = 0
@@ -631,21 +631,23 @@ class CommentFeatures():
 			gold = self.d_y[i]
 			#If prediction != gold, review was misclassified:
 			editorPickOrNah = ["Naaht an editor pick", "editor pick"]
-			if prediction != gold and prediction == 1:
-				c_id = self.d_IDs[i]
-				print "Comment %d misclassified as %s:" %(c_id, editorPickOrNah[prediction])
-				text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ? ORDER BY RANDOM()", (c_id,)).fetchone()
-				print text
-				print "\n"
-				false_neg += 1
-			if prediction != gold and prediction == 0:
-				c_id = self.d_IDs[i]
-				print "Comment %d misclassified as %s:" %(c_id, editorPickOrNah[prediction])
-				text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ? ORDER BY RANDOM()", (c_id,)).fetchone()
-				print text
-				print "\n"
-				false_neg += 1
-			if false_neg + false_pos > numToShow: break
+			if showFalseNegs and false_neg < numToShow:
+				if prediction != gold and prediction == 1:
+					c_id = self.d_IDs[i]
+					print "Comment %d misclassified as %s:" %(c_id, editorPickOrNah[prediction])
+					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ? ORDER BY RANDOM()", (c_id,)).fetchone()
+					print text
+					print "\n"
+					false_neg += 1
+			if showFalsePos and false_pos < numToShow:
+				if prediction != gold and prediction == 0:
+					c_id = self.d_IDs[i]
+					print "Comment %d misclassified as %s:" %(c_id, editorPickOrNah[prediction])
+					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ? ORDER BY RANDOM()", (c_id,)).fetchone()
+					print text
+					print "\n"
+					false_pos += 1
+			if false_neg + false_pos > 2 * numToShow: break
 
 
 
