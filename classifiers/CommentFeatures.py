@@ -15,6 +15,11 @@ import sklearn
 import string
 import time
 from sklearn.feature_selection import RFE 
+import distributedwordreps
+from sklearn.neural_network import BernoulliRBM
+from sklearn.pipeline import Pipeline
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
 #TODO: alphabetize imports
 
 
@@ -32,6 +37,8 @@ class CommentFeatures():
 		#Queries to return all of training or dev data, respectively. Customize if you need other columns
 		self.selectStatement = "SELECT CommentID, CommentText, EditorSelection FROM Comments c WHERE CommentText IS NOT NULL "
 		self.trainCutoffNum = float("inf")
+		self.zeroBlanks = False #A parameter to set all null cells in table to 0
+		self.preprocessText = False
 
 		#User should provide a featureSelectQuery 
 		self.featureSelectionQuery = None
@@ -52,7 +59,12 @@ class CommentFeatures():
 		self.d_x = []
 		self.d_y = []
 
+		#Vectors to store CommentIDs (for use in misclassification analysis, etc)
+		self.t_IDs = []
+		self.d_IDs = []
+
 		self.BOWvectorizer = None #A standin for "using bag of words"
+		self.save_file="afs"
 
 	def close(self):
 		self.c.close()
@@ -69,14 +81,29 @@ class CommentFeatures():
 	def setFeaturesQuery(self, featuresStatement):
 		self.featureSelectionQuery = featuresStatement
 
+	#Method: limitNumComments
 	#Limit number of reviews for debugging/classification purposes
 	def limitNumComments(self, upperLimit):
 		self.trainCutoffNum = upperLimit
 
-	#Set verbose; note that right now this is 80% debugging output
+	#Method: setVerbose
+	#Set verbosity to "on"; note that right now this is 80% debugging output
 	def setVerbose(self, verbose=True):
 		self.verbose = verbose 
 
+	#Method: zeroBlankColumns
+	#When encountering a null value in a loop, treat it as if it is a zero.
+	#(the alternative is for NaNs to be returned)
+	def zeroBlankColumns(self):
+		self.zeroBlanks = True
+
+	#Method: preprocessText
+	#A method that will first strip punctuation and lowecase a string before
+	#vectorization step.
+	def preprocessText(self):
+		self.preprocessText = True 
+
+	#Method: setEditorPicksProportion
 	#Set the artificial number of editor picks to be "proportion"
 	def setEditorPicksProportion(self, train_proportion, dev_proportion = -1):
 		self.proportionEditorPicksTrain = train_proportion
@@ -85,16 +112,27 @@ class CommentFeatures():
 		else:
 			self.proportionEditorPicksDev = dev_proportion 
 
+	def setResultsFile(self, filename):
+		self.save_file = filename
+
 #########Raw feature vector creation: ######################################
 
 	#Method: createSelectStatments
 	#A method which will create custom select statements from the user-entered version for
 	#editor pick and non-editor pick train and dev data.
-	def createSelectStatements(self, statement):
-		self.trainSelectQueryEditorPick =  statement + " WHERE TrainTest =1 AND EditorSelection = 1"
-		self.trainSelectQueryNonEditorPick = statement + " WHERE TrainTest =1 AND EditorSelection = 0"
-		self.devSelectQueryEditorPick = statement + " WHERE TrainTest =2 AND EditorSelection = 1"
-		self.devSelectQueryNonEditorPick = statement + " WHERE TrainTest =2 AND EditorSelection = 0"
+	#The postCondition paremeter refers to whether the passed query already has a "WHERE"
+	#condition included (such as SELECT * WHERE c.ID = f.ID). In this case, must append "ANDS"
+	def createSelectStatements(self, statement, postCondition=False):
+		if postCondition:
+			self.trainSelectQueryEditorPick =  statement + " AND f.TrainTest =1 AND f.EditorSelection = 1"
+			self.trainSelectQueryNonEditorPick = statement + " AND f.TrainTest =1 AND f.EditorSelection = 0"
+			self.devSelectQueryEditorPick = statement + " AND f.TrainTest =2 AND f.EditorSelection = 1"
+			self.devSelectQueryNonEditorPick = statement + " AND f.TrainTest =2 AND f.EditorSelection = 0"
+		else:
+			self.trainSelectQueryEditorPick =  statement + " WHERE TrainTest =1 AND EditorSelection = 1"
+			self.trainSelectQueryNonEditorPick = statement + " WHERE TrainTest =1 AND EditorSelection = 0"
+			self.devSelectQueryEditorPick = statement + " WHERE TrainTest =2 AND EditorSelection = 1"
+			self.devSelectQueryNonEditorPick = statement + " WHERE TrainTest =2 AND EditorSelection = 0"
 
 	#Method: createCommentIDSelectStatement
 	#Create individual select statement that will pull the features associated with
@@ -108,7 +146,7 @@ class CommentFeatures():
 	#The t_x and d_x parameters are in case you are going to run another features set
 	#after bag of words; in which case, you will want to vectorize these vectors separately.
 	def getCommentsBagOfWords(self, t_x, d_x, returnCommentIDs=False):
-		self.createSelectStatements(self.selectStatement)
+		self.createSelectStatements(self.selectStatement, postCondition=True)
 		#Create list of comment IDs for feature extraction: 
 		t_commentIDs = [] 
 		d_commentIDs = []
@@ -187,12 +225,15 @@ class CommentFeatures():
 		X = []
 		bow_X = []
 		Y = []
+		ID_vec = []
 		num_comments = 0
 		for row in self.c.execute(query):
 			feature_dict = {}
 			#blanks_flag = 0
 			for i, col in enumerate(self.c.description):
 				val = row[i]
+				if val == None and self.zeroBlanks:
+					val = 0
 				#if val == None: ##TODO: Remove once no longer adding null features
 				#	val = 0
 					#blanks_flag = 1 #Hackey way to screen out "incompletely featured" comments
@@ -201,7 +242,9 @@ class CommentFeatures():
 					gold = row[i]
 				elif col[0] == "CommentText":
 					bow_X.append(val)
-				elif col[0] == "CommentID" or col[0] == "TrainTest":
+				elif col[0] == "CommentID":
+					ID_vec.append(val)
+				elif col[0] == "TrainTest":
 					continue
 				#Add columns to features:
 				else:
@@ -217,57 +260,61 @@ class CommentFeatures():
 			#Check cutoff:
 			num_comments += 1
 			if num_comments > cutoff: break 
-		return (X, Y, bow_X)
+		return (X, Y, bow_X, ID_vec)
 
 
 	#Method: getCommentFeatures
 	#This method will set self.t_x and self.d_x to be vectors of comment features, and
 	#t_y and d_y to be the gold labels. Note that this relies on passing the model a
 	#feature selection query, and must have first thing you request be comment ID.
-	def getCommentFeatures(self):
-		self.createSelectStatements(self.featureSelectionQuery)
+	def getCommentFeatures(self, postCondition=False):
+		self.createSelectStatements(self.featureSelectionQuery, postCondition)
 
 		#Train and dev bag of words representations
 		t_bow_X = []
 		d_bow_X = []
 
 		#Train, editor
-		train_editorX, Y, bX = self.makeFeatureDict(
+		train_editorX, Y, bX, ids = self.makeFeatureDict(
 			self.trainSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicksTrain)
 		self.t_x.extend(train_editorX)
 		self.t_y.extend(Y)
 		t_bow_X.extend(bX)
+		self.t_IDs.extend(ids)
 
 		if self.verbose:
 			print "Created training/editor pick vectors"
 
 		#Train, non-editor
-		train_noneditorX, Y, bX = self.makeFeatureDict(
+		train_noneditorX, Y, bX, ids = self.makeFeatureDict(
 			self.trainSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicksTrain))
 		self.t_x.extend(train_noneditorX)
 		self.t_y.extend(Y)
 		t_bow_X.extend(bX)
+		self.t_IDs.extend(ids)
 
 		if self.verbose:
 			print "Created training/non-editor pick vectors"
 
 		#Dev, editor
-		dev_editorX, Y, bX = self.makeFeatureDict(
+		dev_editorX, Y, bX, ids = self.makeFeatureDict(
 			self.devSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicksDev)
 		self.d_x.extend(dev_editorX)
 		self.d_y.extend(Y)
 		d_bow_X.extend(bX)
+		self.d_IDs.extend(ids)
 
 
 		if self.verbose:
 			print "Created dev/editor pick vectors"
 
 		#Dev, non-editor
-		dev_noneditorX, Y, bX = self.makeFeatureDict(
+		dev_noneditorX, Y, bX, ids = self.makeFeatureDict(
 			self.devSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicksDev))
 		self.d_x.extend(dev_noneditorX)
 		self.d_y.extend(Y)
 		d_bow_X.extend(bX)
+		self.d_IDs.extend(ids)
 
 		if self.verbose:
 			print "Created dev/non-editor pick vectors"
@@ -345,12 +392,17 @@ class CommentFeatures():
 
 	#Method: featuresAndCommentWordsModel
 	#A model based on extracted features, running bag of words on the comments.
-	def featuresAndCommentWordsModel(self, tfidf=True):
+	def featuresAndCommentWordsModel(self, tfidf=True, maxNgram=1):
 
-		bow_t_x, bow_d_x = self.getCommentFeatures()
+		bow_t_x, bow_d_x = self.getCommentFeatures(postCondition=True)
+
+		ngram_size = (1, maxNgram)
 
 		#Vectorize and transform BOW features:
-		self.BOWvectorizer = fe.text.TfidfVectorizer(stop_words='english')
+		if tfidf:
+			self.BOWvectorizer = fe.text.TfidfVectorizer(stop_words='english', strip_accents='unicode', ngram_range=ngram_size)
+		else:
+			self.BOWvectorizer = fe.text.DictVectorizer()
 		self.BOWvectorizer.fit(bow_t_x + bow_d_x)
 		bow_t_x = self.BOWvectorizer.transform(bow_t_x)
 		bow_d_x = self.BOWvectorizer.transform(bow_d_x)
@@ -409,41 +461,68 @@ class CommentFeatures():
 
 	#Method: setLinearSVM
 	#Sets classifier to be very basic linear SVM
-	def setLinearSVM(self, C_val=1):
+	def setLinearSVM(self, C_val=.1):
 		self.classifier = svm.LinearSVC(C=C_val)
-		print "Using linear SVM with C=%.f" % C_val
+		print "Using linear SVM with C=%.3f" % C_val
 
+	#Method: setSGD
+	#Set classifier to be SGD, with default settings
 	def setSGD(self):
 		self.classifier = linear_model.SGDClassifier()
 		print "Using SGD classifier"
 
+	#Method: setKernalSVM
+	#Set self.classifier to be SVM with kernel as specified
 	def setKernelSVM(self, kernel='rbf'):
 		#Check defaults: http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html
 		self.classifier = svm.SVC(kernel = kernel) 
 		print "Using ", kernel, " Kernel for SVM"
 
+	#Method: setRandomForest
+	#NOTE: this has not been debugged yet; it wants dense data representation,
+	#not our CSR sparse matrices
 	def setRandomForest(self):
 		self.classifier = RandomForestClassifier()
 		print "Using random forest classifier"
+
+	#Method: useCVSearch
+	#Leverage sklearn's GridSearch platform to customize parameters for
+	#an SVC. Note that a consequence of calling this method is setting self.classifier
+	#to be the SVC with found parameters.
+	def useCVSearch(self):
+		print "Starting CV Grid Search"
+		#This many params takes a long time
+		param_grid = [ {'C': [.01, .1, 1, 10], 'kernel': ['poly', 'linear', 'rbf'], 'gamma': [1e-4, 1e-3, 1e-2, 0.1]} ]
+		#See scoring : http://scikit-learn.org/stable/modules/model_evaluation.html
+		clf = sklearn.grid_search.GridSearchCV(self.classifier, param_grid, scoring='f1')
+		clf.fit(self.t_x, self.t_y)
+		params = clf.best_params_
+		#self.classifier = self.classifier(C=params['C'], kernel=params['kernel'], gamma=params['gamma'])
+		#Definitely works as below, not sure if above is correct syntax ^^
+		self.classifier = svm.SVC(C=params['C'], kernel=params['kernel'], gamma=params['gamma'])
+
+	#Method: useNeuralNetwork
+	#This method will train and run a shallow neural network.
+	#NOTE: Pipeline syntax copied directly from:
+	#http://scikit-learn.org/stable/auto_examples/neural_networks/plot_rbm_logistic_classification.html#example-neural-networks-plot-rbm-logistic-classification-py
+	def useNeuralNetwork(self):
+		#Set up logistic regression unit:
+		logistic = linear_model.LogisticRegression()
+		#Set up neural net unit; tune its parameters ##TODO: grid search for params
+		rbm = BernoulliRBM(random_state=0, verbose=True)
+		rbm.learning_rate = 0.06
+		rbm.n_iter = 20
+		rbm.n_components = 50
+		#Make classifier a pipeline
+		self.classifier = Pipeline(steps=[('rbm', rbm), ('logistic', logistic)])
+
 
 ###########Classification step: ##########################################
 
 	#Method: classify
 	#Run the classifier specified under self.classifier on the train and
 	#dev data. Report the analysis.
-	def classify(self, save_file="afs", cv_search = False):
-		if cv_search :
-			print "Starting CV Grid Search"
-			#This many params takes a long time
-			param_grid = [ {'C': [.01, .1, 1, 10], 'kernel': ['poly', 'linear', 'rbf'], 'gamma': [1e-4, 1e-3, 1e-2, 0.1]} ]
-			#See scoring : http://scikit-learn.org/stable/modules/model_evaluation.html
-			clf = sklearn.grid_search.GridSearchCV(self.classifier, param_grid, scoring='f1')
-			clf.fit(self.t_x, self.t_y)
-			params = clf.best_params_
-			#self.classifier = self.classifier(C=params['C'], kernel=params['kernel'], gamma=params['gamma'])
-			#Definitely works as below, not sure if above is correct syntax ^^
-			self.classifier = svm.SVC(C=params['C'], kernel=params['kernel'], gamma=params['gamma'])
-
+	def classify(self):
 		#Fit classifier, then classify train and dev examples
 		print "Starting classifier..."
 		if self.verbose:
@@ -468,9 +547,8 @@ class CommentFeatures():
 		print "Classification report:"
 		self.classification_report(predict_dev, self.d_y)
 
-
 		#Save results to CSV
-		self.save_results(t_acc, d_acc, save_file)
+		self.save_results(t_acc, d_acc)
 
 	def makeNamesList(self):
 		feature_names = []
@@ -510,11 +588,25 @@ class CommentFeatures():
 		print "Precision = %.3f, recall = %.3f, f1 = %.3f, support = %.3f" %(p[0], r[0], f[0], s[0])
 		return p, r, f, s 
 
+	def visualize_tsne(self):
+		print "Preparing TSNE visualization..."
+		#X_array = self.t_x.toarray()
+		tsne_model = TSNE()
+		tsne_x = tsne_model.fit_transform(self.t_x)
+		print "Tsne shape:"
+		print tsne_x.shape
+		colors = []
+		for y in self.t_y:
+			if y == 1:
+				colors.append('r')
+			else: colors.append('g')
+		plt.scatter(tsne_x[:, 0], tsne_x[:, 1], c=colors)
+		plt.show()
 
-	def save_results(self, train, dev, save_file):
-		if save_file == "afs":
-			save_file = "/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/results.csv"
-		with open(save_file, 'a') as results_file:
+	def save_results(self, train, dev):
+		if self.save_file == "afs":
+			self.save_file = "/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/results.csv"
+		with open(self.save_file, 'a') as results_file:
 			num_total = self.trainCutoffNum
 			num_1s = num_total * self.proportionEditorPicksTrain
 
@@ -529,6 +621,35 @@ class CommentFeatures():
 			results_file.write("Classifier = ")
 			results_file.write(str(self.classifier) + '\n\n')
 
+	#Method: viewMisclassifiedReviews
+	#A method that will print out reviews that were misclassified.
+	def viewMisclassifiedReviews(self, numToShow=10, allFromDev=True, showFalseNegs=True, showFalsePos=True):
+		#View mislcassified reviews:
+		predictions_dev = self.classifier.predict(self.d_x)
+		false_pos = 0
+		false_neg = 0
+		for i in range(len(predictions_dev)):
+			prediction = predictions_dev[i]
+			gold = self.d_y[i]
+			#If prediction != gold, review was misclassified:
+			editorPickOrNah = ["Naaht an editor pick", "editor pick"]
+			if showFalseNegs and false_neg < numToShow:
+				if prediction != gold and prediction == 1:
+					c_id = self.d_IDs[i]
+					print "Comment %d misclassified as %s:" %(c_id, editorPickOrNah[prediction])
+					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ? ORDER BY RANDOM()", (c_id,)).fetchone()
+					print text
+					print "\n"
+					false_neg += 1
+			if showFalsePos and false_pos < numToShow:
+				if prediction != gold and prediction == 0:
+					c_id = self.d_IDs[i]
+					print "Comment %d misclassified as %s:" %(c_id, editorPickOrNah[prediction])
+					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ? ORDER BY RANDOM()", (c_id,)).fetchone()
+					print text
+					print "\n"
+					false_pos += 1
+			if false_neg + false_pos > 2 * numToShow: break
 
 
 

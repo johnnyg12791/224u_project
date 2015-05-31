@@ -70,13 +70,19 @@ def add_similarity_metric(database, feature_name, feature_fct):
     cursor.close() 
     database.commit()   
 
-#Method: updated_add_similarity_metric
-#Updated method of add_similarity_metric that iterates through DB with a single cursor loop.
+#Method: add_multiple_similarity_metrics
+#Alternate method to add_similarity_metric that iterates through DB with a single cursor loop.
 #Includes support for using a cutoff number of reviews (defined immediately above main)
-def updated_add_similarity_metric(database, feature_name, feature_fct):
+def add_multiple_similarity_metrics(database):
+    #loop cursor
     cursor = database.cursor()
-    make_sure_feature_in_db(cursor, feature_name)
+    #insertion cursor
+    set_cursor = database.cursor()
+    make_sure_feature_in_db(cursor, "skipgrams_2")
+    make_sure_feature_in_db(cursor, "skipgrams_3")
 
+
+    #auxillary info
     counter = 0
 
     get_fulltexts_query = "SELECT CommentID, CommentText, FullText FROM ArticleText a, Comments c WHERE c.ArticleURL=a.URL"
@@ -88,12 +94,31 @@ def updated_add_similarity_metric(database, feature_name, feature_fct):
         insert_statement = ("UPDATE Features SET %s = %f WHERE CommentID = %d" % (feature_name, feature_value, c_id))
         cursor.execute(insert_statement)
 
+    skipgram2_metadata = {}
+    skipgram3_metadata = {}
+
+    #Loop through all reviews
+    get_fulltexts_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL FROM ArticleText a, Comments c WHERE c.ArticleURL=a.URL"
+    for c_id, c_text, a_text, a_url in cursor.execute(get_fulltexts_query):
+        c_vec = word_vec(c_text)
+        a_vec = word_vec(a_text)
+        
+        #Add 2-skipgrams
+        skip2_similarity = jaccard_similarity_skipgrams(c_vec, a_vec, a_url, 2, skipgram2_metadata)
+        #Add 3-skipgrams
+        skip3_similarity = jaccard_similarity_skipgrams(c_vec, a_vec, a_url, 3, skipgram3_metadata)
+
+
+        insert_statement = ("UPDATE Features SET skipgrams_2 = %f, skipgrams_3 = %f WHERE CommentID = %d" % (skip2_similarity, skip3_similarity, c_id))
+        set_cursor.execute(insert_statement)
+
         counter += 1
         if counter % 1000 == 0:
             database.commit()
-            print counter
+            print "Have added %d scores" % counter
         #if counter > cutoffNum: break
 
+    set_cursor.close()
     cursor.close()
     database.commit()
 
@@ -145,9 +170,6 @@ def jaccard_sim(x, y):
     intersection = len(set(x).intersection(set(y)))
     return intersection/union
 
-#def jaccard_no_stop(x,y):
-#    x_set = 
-
 
 
 def n_char_word_range(c_text, a_text):
@@ -167,14 +189,17 @@ def size_compared_to_article(c_text, a_text):
     return float(len(c_text)+1)/float(len(a_text)+1)
 
 
-
+def KLDistance(x, y):
+    pass
 
 #Method: jaccard_similarity_skipgrams
 #Adds "skipgrams"-- like a bigram, but with up to k words separating them--
 #to the database, under the jaccard similarity metric.
-def jaccard_similarity_skipgrams(c_text, a_text):
+#The "metadict" is a cached copy of article text dictionaries (Thanks John!)
+#This way you don't have to compute the same skipgrams hundreds of times.
+def jaccard_similarity_skipgrams(c_text, a_text, a_url, kVal, metadict):
 
-    k = 2 # Number of spaces to skip
+    k = kVal # Number of spaces to skip
     c_dict = {}
     a_dict = {}
 
@@ -184,15 +209,21 @@ def jaccard_similarity_skipgrams(c_text, a_text):
             skipgram = (c_text[i], c_text[j])
             c_dict[skipgram] = 1
     #Get skipgrams from article text:
-    for i in range(len(a_text)):
-        for j in range(i+1, min(len(a_text), i + k + 2)):
-            skipgram = (a_text[i], a_text[j])
-            a_dict[skipgram] = 1
+    if a_url in metadict:
+        a_dict = metadict[a_url]
+    else:
+        for i in range(len(a_text)):
+            for j in range(i+1, min(len(a_text), i + k + 2)):
+                skipgram = (a_text[i], a_text[j])
+                a_dict[skipgram] = 1
+        metadict[a_url] = a_dict
 
     #Compute Jaccard similarity of this skipgram:
     union = float(len(set(c_dict.keys()).union(set(a_dict.keys()))))
     intersect = len(set(c_dict.keys()).intersection(set(a_dict.keys())))
-    return intersect / union 
+    dist = intersect / union
+    return dist 
+
 
 
 def euclidean_sim(x, y):
@@ -211,9 +242,12 @@ def main():
     #add_feature_to_database(database, "IAmA", ["I'm a", "I am a", "I am an", "I'm an"])
     #add_feature_to_database(database, "Europe")
 
-    updated_add_similarity_metric(database, "size_compared_to_article", n_char_word_range)
+    #updated_add_similarity_metric(database, "size_compared_to_article", n_char_word_range)
 
     #updated_add_similarity_metric(database, "skipgrams_2", jaccard_similarity_skipgrams)
+    #add_multiple_similarity_metrics(database)
+
+
     #add_similarity_metric(database, "Cosine", cosine_sim)
     #add_similarity_metric(database, "Jaccard", jaccard_sim)
     #add_similarity_metric(database, "Euclidean", euclidean_sim)
@@ -221,7 +255,8 @@ def main():
     database.close()
 
 verbose = True 
-#cutoffNum = 10
+cutoffNum = float("inf")
+
 if __name__ == "__main__":
     main()
 
