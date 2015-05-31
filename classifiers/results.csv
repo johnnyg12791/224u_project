@@ -303,3 +303,36 @@ Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.
        loss='hinge', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
        random_state=None, shuffle=False, verbose=0, warm_start=False)
 
+2015-05-31 04:29
+Number of 1s : 7500.0 out of 15000
+---------------------
+| f1_train | f1_dev  |
+| 0.68986  | 0.67783 |
+---------------------
+Features = Cosine,Jaccard,n_chars,n_upper,n_words,skipgrams_2,skipgrams_3,subjectivity
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='l2', multi_class='ovr', penalty='l2',
+     random_state=None, tol=0.0001, verbose=0)
+
+2015-05-31 04:41
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.68971  | 0.47449 |
+---------------------
+Features = Agree,CC,CD,Conservative,Cosine,DT,Democrat,Disagree,EX,Europe,FW,God,JJ,JJR,JJS,Jaccard,LS,Liberal,MD,NN,NNP,NNPS,NNS,Obama,PDT,POS,PRP,PRP$,Palestine,PhD,RB,RBR,RBS,RP,Republican,UH,VB,VBD,VBG,VBN,VBP,VBZ,WDT,WP,WP$,WRB,avg_sentence_len,avg_word_len,n_10_char_words,n_11_char_words,n_12_char_words,n_13_char_words,n_14_char_words,n_15_char_words,n_16_char_words,n_17_char_words,n_18_char_words,n_19_char_words,n_1_char_words,n_20_char_words,n_2_char_words,n_3_char_words,n_4_char_words,n_5_char_words,n_6_char_words,n_7_char_words,n_8_char_words,n_9_char_words,n_chars,n_exclamations,n_novel_tags,n_periods,n_questions,n_sentences,n_upper,n_words,perc_10_char_words,perc_11_char_words,perc_12_char_words,perc_13_char_words,perc_14_char_words,perc_15_char_words,perc_16_char_words,perc_17_char_words,perc_18_char_words,perc_19_char_words,perc_1_char_words,perc_20_char_words,perc_2_char_words,perc_3_char_words,perc_4_char_words,perc_5_char_words,perc_6_char_words,perc_7_char_words,perc_8_char_words,perc_9_char_words,polarity,president,skipgrams_2,skipgrams_3,starts_with_I,subjectivity,words_per_sentence
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='l2', multi_class='ovr', penalty='l2',
+     random_state=None, tol=0.0001, verbose=0)
+
+2015-05-31 04:53
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.68909  | 0.42629 |
+---------------------
+Features = Agree,CC,CD,Conservative,Cosine,DT,Democrat,Disagree,EX,Europe,FW,God,JJ,JJR,JJS,Jaccard,LS,Liberal,MD,NN,NNP,NNPS,NNS,Obama,PDT,POS,PRP,PRP$,Palestine,PhD,RB,RBR,RBS,RP,Republican,UH,VB,VBD,VBG,VBN,VBP,VBZ,WDT,WP,WP$,WRB,avg_sentence_len,avg_word_len,n_10_char_words,n_11_char_words,n_12_char_words,n_13_char_words,n_14_char_words,n_15_char_words,n_16_char_words,n_17_char_words,n_18_char_words,n_19_char_words,n_1_char_words,n_20_char_words,n_2_char_words,n_3_char_words,n_4_char_words,n_5_char_words,n_6_char_words,n_7_char_words,n_8_char_words,n_9_char_words,n_chars,n_exclamations,n_novel_tags,n_periods,n_questions,n_sentences,n_upper,n_words,perc_10_char_words,perc_11_char_words,perc_12_char_words,perc_13_char_words,perc_14_char_words,perc_15_char_words,perc_16_char_words,perc_17_char_words,perc_18_char_words,perc_19_char_words,perc_1_char_words,perc_20_char_words,perc_2_char_words,perc_3_char_words,perc_4_char_words,perc_5_char_words,perc_6_char_words,perc_7_char_words,perc_8_char_words,perc_9_char_words,polarity,president,skipgrams_2,skipgrams_3,starts_with_I,subjectivity,words_per_sentence
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='l2', multi_class='ovr', penalty='l2',
+     random_state=None, tol=0.0001, verbose=0)
+

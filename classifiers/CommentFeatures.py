@@ -33,6 +33,7 @@ class CommentFeatures():
 		self.selectStatement = "SELECT CommentID, CommentText, EditorSelection FROM Comments c WHERE CommentText IS NOT NULL "
 		self.trainCutoffNum = float("inf")
 		self.zeroBlanks = False #A parameter to set all null cells in table to 0
+		self.preprocessText = False
 
 		#User should provide a featureSelectQuery 
 		self.featureSelectionQuery = None
@@ -54,6 +55,7 @@ class CommentFeatures():
 		self.d_y = []
 
 		self.BOWvectorizer = None #A standin for "using bag of words"
+		self.save_file="afs"
 
 	def close(self):
 		self.c.close()
@@ -70,17 +72,29 @@ class CommentFeatures():
 	def setFeaturesQuery(self, featuresStatement):
 		self.featureSelectionQuery = featuresStatement
 
+	#Method: limitNumComments
 	#Limit number of reviews for debugging/classification purposes
 	def limitNumComments(self, upperLimit):
 		self.trainCutoffNum = upperLimit
 
-	#Set verbose; note that right now this is 80% debugging output
+	#Method: setVerbose
+	#Set verbosity to "on"; note that right now this is 80% debugging output
 	def setVerbose(self, verbose=True):
 		self.verbose = verbose 
 
+	#Method: zeroBlankColumns
+	#When encountering a null value in a loop, treat it as if it is a zero.
+	#(the alternative is for NaNs to be returned)
 	def zeroBlankColumns(self):
 		self.zeroBlanks = True
 
+	#Method: preprocessText
+	#A method that will first strip punctuation and lowecase a string before
+	#vectorization step.
+	def preprocessText(self):
+		self.preprocessText = True 
+
+	#Method: setEditorPicksProportion
 	#Set the artificial number of editor picks to be "proportion"
 	def setEditorPicksProportion(self, train_proportion, dev_proportion = -1):
 		self.proportionEditorPicksTrain = train_proportion
@@ -89,16 +103,27 @@ class CommentFeatures():
 		else:
 			self.proportionEditorPicksDev = dev_proportion 
 
+	def setResultsFile(self, filename):
+		self.save_file = filename
+
 #########Raw feature vector creation: ######################################
 
 	#Method: createSelectStatments
 	#A method which will create custom select statements from the user-entered version for
 	#editor pick and non-editor pick train and dev data.
-	def createSelectStatements(self, statement):
-		self.trainSelectQueryEditorPick =  statement + " WHERE TrainTest =1 AND EditorSelection = 1"
-		self.trainSelectQueryNonEditorPick = statement + " WHERE TrainTest =1 AND EditorSelection = 0"
-		self.devSelectQueryEditorPick = statement + " WHERE TrainTest =2 AND EditorSelection = 1"
-		self.devSelectQueryNonEditorPick = statement + " WHERE TrainTest =2 AND EditorSelection = 0"
+	#The postCondition paremeter refers to whether the passed query already has a "WHERE"
+	#condition included (such as SELECT * WHERE c.ID = f.ID). In this case, must append "ANDS"
+	def createSelectStatements(self, statement, postCondition=False):
+		if postCondition:
+			self.trainSelectQueryEditorPick =  statement + " AND f.TrainTest =1 AND f.EditorSelection = 1"
+			self.trainSelectQueryNonEditorPick = statement + " AND f.TrainTest =1 AND f.EditorSelection = 0"
+			self.devSelectQueryEditorPick = statement + " AND f.TrainTest =2 AND f.EditorSelection = 1"
+			self.devSelectQueryNonEditorPick = statement + " AND f.TrainTest =2 AND f.EditorSelection = 0"
+		else:
+			self.trainSelectQueryEditorPick =  statement + " WHERE TrainTest =1 AND EditorSelection = 1"
+			self.trainSelectQueryNonEditorPick = statement + " WHERE TrainTest =1 AND EditorSelection = 0"
+			self.devSelectQueryEditorPick = statement + " WHERE TrainTest =2 AND EditorSelection = 1"
+			self.devSelectQueryNonEditorPick = statement + " WHERE TrainTest =2 AND EditorSelection = 0"
 
 	#Method: createCommentIDSelectStatement
 	#Create individual select statement that will pull the features associated with
@@ -112,7 +137,7 @@ class CommentFeatures():
 	#The t_x and d_x parameters are in case you are going to run another features set
 	#after bag of words; in which case, you will want to vectorize these vectors separately.
 	def getCommentsBagOfWords(self, t_x, d_x, returnCommentIDs=False):
-		self.createSelectStatements(self.selectStatement)
+		self.createSelectStatements(self.selectStatement, postCondition=True)
 		#Create list of comment IDs for feature extraction: 
 		t_commentIDs = [] 
 		d_commentIDs = []
@@ -230,8 +255,8 @@ class CommentFeatures():
 	#This method will set self.t_x and self.d_x to be vectors of comment features, and
 	#t_y and d_y to be the gold labels. Note that this relies on passing the model a
 	#feature selection query, and must have first thing you request be comment ID.
-	def getCommentFeatures(self):
-		self.createSelectStatements(self.featureSelectionQuery)
+	def getCommentFeatures(self, postCondition=False):
+		self.createSelectStatements(self.featureSelectionQuery, postCondition)
 
 		#Train and dev bag of words representations
 		t_bow_X = []
@@ -351,12 +376,17 @@ class CommentFeatures():
 
 	#Method: featuresAndCommentWordsModel
 	#A model based on extracted features, running bag of words on the comments.
-	def featuresAndCommentWordsModel(self, tfidf=True):
+	def featuresAndCommentWordsModel(self, tfidf=True, maxNgram=1):
 
-		bow_t_x, bow_d_x = self.getCommentFeatures()
+		bow_t_x, bow_d_x = self.getCommentFeatures(postCondition=True)
+
+		ngram_size = (1, maxNgram)
 
 		#Vectorize and transform BOW features:
-		self.BOWvectorizer = fe.text.TfidfVectorizer(stop_words='english')
+		if tfidf:
+			self.BOWvectorizer = fe.text.TfidfVectorizer(stop_words='english', strip_accents='unicode', ngram_range=ngram_size)
+		else:
+			self.BOWvectorizer = fe.text.DictVectorizer()
 		self.BOWvectorizer.fit(bow_t_x + bow_d_x)
 		bow_t_x = self.BOWvectorizer.transform(bow_t_x)
 		bow_d_x = self.BOWvectorizer.transform(bow_d_x)
@@ -432,24 +462,24 @@ class CommentFeatures():
 		self.classifier = RandomForestClassifier()
 		print "Using random forest classifier"
 
+	def useCVSearch():
+		print "Starting CV Grid Search"
+		#This many params takes a long time
+		param_grid = [ {'C': [.01, .1, 1, 10], 'kernel': ['poly', 'linear', 'rbf'], 'gamma': [1e-4, 1e-3, 1e-2, 0.1]} ]
+		#See scoring : http://scikit-learn.org/stable/modules/model_evaluation.html
+		clf = sklearn.grid_search.GridSearchCV(self.classifier, param_grid, scoring='f1')
+		clf.fit(self.t_x, self.t_y)
+		params = clf.best_params_
+		#self.classifier = self.classifier(C=params['C'], kernel=params['kernel'], gamma=params['gamma'])
+		#Definitely works as below, not sure if above is correct syntax ^^
+		self.classifier = svm.SVC(C=params['C'], kernel=params['kernel'], gamma=params['gamma'])
+
 ###########Classification step: ##########################################
 
 	#Method: classify
 	#Run the classifier specified under self.classifier on the train and
 	#dev data. Report the analysis.
-	def classify(self, save_file="afs", cv_search=False):
-		if cv_search :
-			print "Starting CV Grid Search"
-			#This many params takes a long time
-			param_grid = [ {'C': [.01, .1, 1, 10], 'kernel': ['poly', 'linear', 'rbf'], 'gamma': [1e-4, 1e-3, 1e-2, 0.1]} ]
-			#See scoring : http://scikit-learn.org/stable/modules/model_evaluation.html
-			clf = sklearn.grid_search.GridSearchCV(self.classifier, param_grid, scoring='f1')
-			clf.fit(self.t_x, self.t_y)
-			params = clf.best_params_
-			#self.classifier = self.classifier(C=params['C'], kernel=params['kernel'], gamma=params['gamma'])
-			#Definitely works as below, not sure if above is correct syntax ^^
-			self.classifier = svm.SVC(C=params['C'], kernel=params['kernel'], gamma=params['gamma'])
-
+	def classify(self):
 		#Fit classifier, then classify train and dev examples
 		print "Starting classifier..."
 		if self.verbose:
@@ -472,9 +502,8 @@ class CommentFeatures():
 		print "Classification report:"
 		self.classification_report(predict_dev, self.d_y)
 
-
 		#Save results to CSV
-		self.save_results(t_acc, d_acc, save_file)
+		self.save_results(t_acc, d_acc)
 
 	def makeNamesList(self):
 		feature_names = []
@@ -515,10 +544,10 @@ class CommentFeatures():
 		return p, r, f, s 
 
 
-	def save_results(self, train, dev, save_file):
-		if save_file == "afs":
-			save_file = "/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/results.csv"
-		with open(save_file, 'a') as results_file:
+	def save_results(self, train, dev):
+		if self.save_file == "afs":
+			self.save_file = "/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/results.csv"
+		with open(self.save_file, 'a') as results_file:
 			num_total = self.trainCutoffNum
 			num_1s = num_total * self.proportionEditorPicksTrain
 
