@@ -603,6 +603,9 @@ class CommentFeatures():
 		plt.scatter(tsne_x[:, 0], tsne_x[:, 1], c=colors)
 		plt.show()
 
+	def visualize_2_features(self, feature1, feature2):
+		pass
+
 	def save_results(self, train, dev):
 		if self.save_file == "afs":
 			self.save_file = "/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/results.csv"
