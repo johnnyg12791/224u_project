@@ -4,6 +4,8 @@ import sys
 import time
 import string
 from collections import Counter
+from nltk.stem.porter import *
+
 
 def make_sure_feature_in_db(cursor, feature_name):
     cursor.execute("SELECT * FROM Features LIMIT 1")
@@ -150,7 +152,7 @@ def get_article_text_from_comment(cursor, comment_id):
     stmt = "SELECT FullText From ArticleText AS A JOIN Comments AS C ON A.URL=C.ArticleURL WHERE C.CommentID = " + str(comment_id)
     return [text for text in cursor.execute(stmt)][0][0]
 
-#remove stop words?
+#Method: cosine_sim
 def cosine_sim(x, y):
     dot_product = 0
     x_dict = Counter(x)
@@ -170,6 +172,17 @@ def jaccard_sim(x, y):
     intersection = len(set(x).intersection(set(y)))
     return intersection/union
 
+#Method: stem_jaccard_sim
+#Stem the words using NLTK's PorterStemmer, then calculate the jaccard distance
+#between a comment and its article text.
+def stem_jaccard_sim(x, y):
+    stemmy = PorterStemmer()
+    stemmed_x = [stemmy.stem(word) for word in x]
+    stemmed_y = [stemmy.stem(word) for word in y]
+    print x
+    print stemmed_x
+    return jaccard_sim(stemmed_x, stemmed_y)
+
 
 def n_char_word_range(c_text, a_text):
     low = 16
@@ -188,8 +201,6 @@ def size_compared_to_article(c_text, a_text):
     return float(len(c_text)+1)/float(len(a_text)+1)
 
 
-def KLDistance(x, y):
-    pass
 
 #Method: jaccard_similarity_skipgrams
 #Adds "skipgrams"-- like a bigram, but with up to k words separating them--
@@ -241,7 +252,7 @@ def main():
     #updated_add_similarity_metric(database, "skipgrams_2", jaccard_similarity_skipgrams)
     #add_multiple_similarity_metrics(database)
 
-
+    add_similarity_metric(database, "stem_jaccard", stem_jaccard_sim)
     #add_similarity_metric(database, "Cosine", cosine_sim)
     #add_similarity_metric(database, "Jaccard", jaccard_sim)
     #add_similarity_metric(database, "Euclidean", euclidean_sim)
@@ -249,7 +260,7 @@ def main():
     database.close()
 
 verbose = True 
-cutoffNum = float("inf")
+cutoffNum = 10 #float("inf")
 
 if __name__ == "__main__":
     main()
