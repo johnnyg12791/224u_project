@@ -171,7 +171,6 @@ def jaccard_sim(x, y):
     return intersection/union
 
 
-
 def n_char_word_range(c_text, a_text):
     low = 16
     high = 20
@@ -223,11 +222,6 @@ def jaccard_similarity_skipgrams(c_text, a_text, a_url, kVal, metadict):
     intersect = len(set(c_dict.keys()).intersection(set(a_dict.keys())))
     dist = intersect / union
     return dist 
-
-
-
-def euclidean_sim(x, y):
-    pass
 
 
 def ends_with_question(a_text, c_text):
