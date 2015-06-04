@@ -14,22 +14,22 @@ overlap_features = "SELECT CommentText, skipgrams_2, skipgrams_3, Jaccard, Cosin
 everything_for_bow = "SELECT f.*, c.CommentText FROM Comments c, Features f, Articles a WHERE c.CommentID = f.CommentID AND c.ArticleURL = a.URL AND a.Section = 'World' "
 nn_features = "SELECT num_1_letter_words, skipgrams_3, n_sentences, EditorSelection FROM Features"
 
-'SELECT f.n_sentences, nltk.POS, FROM Features f, nltk_features nltk JOIN '
+#'SELECT f.n_sentences, nltk.POS, FROM Features f, nltk_features nltk JOIN '
 #Initialize features model:
-cf = CommentFeatures("../john_test_4.db")
 poly_features = "SELECT KLDistance, KLDistance_Nouns, Jaccard, polarity, n_exclamations, Cosine, n_questions, n_words, perc_1_char_words, perc_2_5_letter_words, perc_6_9_letter_words, perc_10_14_letter_words, perc_15plus_letter_words, JJR, RP, UH, VBD, POS, EX, RBS, PDT, NNPS, FW, LS, skipgrams_3, skipgrams_2, CommentID, EditorSelection FROM Features "
 poly_features_bow = "SELECT KLDistance, KLDistance_Nouns, Jaccard, polarity, n_exclamations, Cosine, n_questions, n_words, perc_1_char_words, perc_2_5_letter_words, perc_6_9_letter_words, perc_10_14_letter_words, perc_15plus_letter_words, JJR, RP, UH, VBD, POS, EX, RBS, PDT, NNPS, FW, LS, skipgrams_3, skipgrams_2, c.CommentID, c.EditorSelection, CommentText FROM Features f, Comments c, Articles a WHERE f.CommentID = c.CommentID AND a.Section = 'World' AND a.URL = c.ArticleURL "
 nltk_feats = "SELECT WRB, JJR, RP, UH, VBD, POS, EX, RBS, PDT, NNPS, FW, LS, EditorSelection FROM Features "
 one_feat = "SELECT Jaccard, c.CommentID, c.EditorSelection, c.CommentText FROM Features f, Comments c WHERE c.CommentID = f.CommentID "
+stem_jac_feat = "SELECT stem_jaccard, c.CommentID, c.EditorSelection, c.CommentText FROM Comments c, Features f WHERE c.CommentID = f.CommentID "
 ##############Initialize features model:
 cf = CommentFeatures()
 
 
 ##############Set cutoff on review count, verbosity, features query:
-cf.limitNumComments(1000) #50,000 samples will be our default "small" size
+cf.limitNumComments(50000) #50,000 samples will be our default "small" size
 cf.setEditorPicksProportion(0.5, 0.5) #Start with a 50/50 editor/non-editor split
 cf.setVerbose()
-cf.setFeaturesQuery(n_chars)
+cf.setFeaturesQuery(stem_jac_feat)
 cf.zeroBlankColumns()
 #cf.preprocessText()
 #cf.setResultsFile("results.csv") ##JOHN-- pulled this out of "classify"
@@ -54,7 +54,7 @@ cf.setLinearSVM(C_val=.5)
 
 ##############Perform the classification step, show metrics:
 cf.classify()
-cf.visualize_tsne()
+#cf.visualize_tsne()
 #Can only use this with a Linear Kernel
 #Note: to see topNCoefficients, must include CommentText and CommentID in select query
 cf.topNCoefficients(30) #Check to see which coefficients are assigned highest classification weight

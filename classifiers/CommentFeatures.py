@@ -234,8 +234,6 @@ class CommentFeatures():
 				val = row[i]
 				if val == None and self.zeroBlanks:
 					val = 0
-				#if val == None: ##TODO: Remove once no longer adding null features
-				#	val = 0
 					#blanks_flag = 1 #Hackey way to screen out "incompletely featured" comments
 				#Append EditorSelection to golds:
 				if col[0] == "EditorSelection":
@@ -267,6 +265,7 @@ class CommentFeatures():
 	#This method will set self.t_x and self.d_x to be vectors of comment features, and
 	#t_y and d_y to be the gold labels. Note that this relies on passing the model a
 	#feature selection query, and must have first thing you request be comment ID.
+	#The split parameter is for splitting our input based on some feature.
 	def getCommentFeatures(self, postCondition=False):
 		self.createSelectStatements(self.featureSelectionQuery, postCondition)
 
@@ -321,6 +320,123 @@ class CommentFeatures():
 
 		#Return train and dev bag of words representations
 		return t_bow_X, d_bow_X
+
+	def featureDictSplitClassifier(self, query, cutoffNumComments, vectorizeBOW=False):
+		short_X = []
+		short_bow = []
+		long_X = []
+		long_bow = []
+		short_Y = []
+		long_Y = []
+		short_IDS = []
+		long_IDS = []
+
+		num_comments = 0
+		for row in self.c.execute(query):
+			feature_dict = {}
+			for i, col in enumerate(self.c.description):
+				val = row[i]
+				if val == None and self.zeroBlanks:
+					val = 0
+				feature_dict[col[0]] = val
+
+			commentText = feature_dict.pop("CommentText")
+			length_comment = len(commentText.split())
+			if length_comment > 20:
+				long_Y.append(feature_dict.pop("EditorSelection"))
+				long_IDS.append(feature_dict.pop("CommentID"))
+				long_bow.append(commentText)
+				long_X.append(feature_dict)
+			else:
+				short_Y.append(feature_dict.pop("EditorSelection"))
+				short_IDS.append(feature_dict.pop("CommentID"))
+				short_bow.append(commentText)
+				short_X.append(feature_dict)
+
+			#Check cutoff:
+			num_comments += 1
+			if num_comments > cutoff: break 
+		return (short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS)
+
+	#Method: getCommentsSplitClassifier
+	#This method will set self.t_x and self.d_x to be vectors of comment features, and
+	#t_y and d_y to be the gold labels. Note that this relies on passing the model a
+	#feature selection query, and must have first thing you request be comment ID.
+	#The split parameter is for splitting our input based on some feature.
+	def getCommentsSplitClassifier(self):
+
+		self.createSelectStatements(self.featureSelectionQuery, postCondition)
+
+		#Train and dev bag of words representations
+		s_t_bow_X = []
+		l_t_bow_X = []
+		s_d_bow_X = []
+		l_d_bow_X = []
+
+		#Train, editor
+		short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS = self.makeFeatureDict(
+			self.trainSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicksTrain)
+
+		self.s_t_x.extend(short_X)
+		self.l_t_x.extend(long_X)
+		self.s_t_y.extend(short_Y)
+		self.l_t_s.extend(long_Y)
+		s_t_bow_X.extend(short_bow)
+		l_t_bow_X.extend(long_bow)
+		self.s_t_ID.extend(short_bow)
+		self.l_t_ID.extend(long_bow)
+
+		if self.verbose:
+			print "Created training/editor pick vectors"
+
+		#Train, non-editor
+		short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS = self.makeFeatureDict(
+			self.trainSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicksTrain))
+		self.s_t_x.extend(short_X)
+		self.l_t_x.extend(long_X)
+		self.s_t_y.extend(short_Y)
+		self.l_t_s.extend(long_Y)
+		s_t_bow_X.extend(short_bow)
+		l_t_bow_X.extend(long_bow)
+		self.s_t_ID.extend(short_bow)
+		self.l_t_ID.extend(long_bow)
+
+		if self.verbose:
+			print "Created training/non-editor pick vectors"
+
+		#Dev, editor
+		short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS = self.makeFeatureDict(
+			self.devSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicksDev)
+		self.s_d_x.extend(short_X)
+		self.l_d_x.extend(long_X)
+		self.s_d_y.extend(short_Y)
+		self.l_d_s.extend(long_Y)
+		s_d_bow_X.extend(short_bow)
+		l_d_bow_X.extend(long_bow)
+		self.s_d_ID.extend(short_bow)
+		self.l_d_ID.extend(long_bow)
+
+
+		if self.verbose:
+			print "Created dev/editor pick vectors"
+
+		#Dev, non-editor
+		short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS = self.makeFeatureDict(
+			self.devSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicksDev))
+		self.s_d_x.extend(short_X)
+		self.l_d_x.extend(long_X)
+		self.s_d_y.extend(short_Y)
+		self.l_d_s.extend(long_Y)
+		s_d_bow_X.extend(short_bow)
+		l_d_bow_X.extend(long_bow)
+		self.s_d_ID.extend(short_bow)
+		self.l_d_ID.extend(long_bow)
+
+		if self.verbose:
+			print "Created dev/non-editor pick vectors"
+
+		#Return train and dev bag of words representations
+		return s_t_bow_X, l_t_bow_X, s_d_bow_X, l_d_bow_X
 
 ################ Cleaning up feature vectors: ###############
 
@@ -417,44 +533,33 @@ class CommentFeatures():
 		self.t_x = sps.hstack([self.t_x, bow_t_x])
 		self.d_x = sps.hstack([self.d_x, bow_d_x])
 
-	#Method: featuresAndCommentWordsModel
-	#A feature model based on extracted features + BOW on the comments.
-	def featuresAndCommentWordsModel_slow(self, tfidf=True):
-		#Get bag of words from comments:
-		bow_t_x = []
-		bow_d_x = []
-		t_IDs, d_IDs = self.getCommentsBagOfWords(t_x=bow_t_x, d_x=bow_d_x, returnCommentIDs=True)
+	#Method: splitClassifierModel
+	#Model which runs two classifiers
+	def splitClassifierModel(self, tfidf=True, maxNgram=1):
+		s_t_bow_X, l_t_bow_X, s_d_bow_X, l_d_bow_X = getCommentsSplitClassifier()
+		ngram_size = (1, maxNgram)
 
-		#Vectorize and transform BOW features:
-		self.BOWvectorizer = fe.text.TfidfVectorizer(stop_words='english')
-		self.BOWvectorizer.fit(bow_t_x + bow_d_x)
-		bow_t_x = self.BOWvectorizer.transform(bow_t_x)
-		bow_d_x = self.BOWvectorizer.transform(bow_d_x)
+		if tfidf:
+			self.BOWvectorizer = fe.text.TfidfVectorizer(stop_words='english', strip_accents='unicode', ngram_range=ngram_size)
+		else:
+			self.BOWvectorizer = fe.text.DictVectorizer()
+		self.BOWvectorizer.fit(s_t_bow_X + l_t_bow_X + s_d_bow_X + l_d_bow_X)
+		s_t_bow_X = self.BOWvectorizer.transform(s_t_bow_X)
+		l_t_bow_X = self.BOWvectorizer.transform(l_t_bow_X)
+		s_d_bow_X = self.BOWvectorizer.transform(s_d_bow_X)
+		l_d_bow_X = self.BOWvectorizer.transform(l_d_bow_X)
 
-		if self.verbose:
-			print "Extracted and vectorized BOW features..."
-
-		#Get extra features, using list found in BOW task:
-		feat_t_x = []
-		feat_d_x = []
-		for c_id in t_IDs:
-			feat_t_x.append(self.getFeatureRow(self.featureSelectionQuery, c_id))
-		for c_id in d_IDs:
-			feat_d_x.append(self.getFeatureRow(self.featureSelectionQuery, c_id))
-
-
-		#Vectorize the extra features; store in self.t_x and self.d_x
 		self.vectorizer = fe.DictVectorizer()
-		self.vectorizer.fit(feat_t_x + feat_d_x)
-		self.t_x = self.vectorizer.transform(feat_t_x)
-		self.d_x = self.vectorizer.transform(feat_d_x)
+		self.vectorizer.fit(self.s_t_x + self.l_t_x + self.s_d_x + self.l_d_x)
+		self.s_t_x = self.vectorizer.transform(self.s_t_x)
+		self.l_t_x = self.vectorizer.transform(self.l_t_x)
+		self.s_d_x = self.vectorizer.transform(self.s_d_x)
+		self.l_d_x = self.vectorizer.transform(self.l_d_x)
 
-		if self.verbose:
-			print "Extracted and vectorized extra features..."
-
-		#Stack them together:
-		self.t_x = sps.hstack([self_t_x, bow_t_x])
-		self.d_x = sps.hstack([self.d_x, bow_d_x])
+		self.s_t_x = sps.hstack([self.s_t_x, s_t_bow_X])
+		self.l_t_x = sps.hstack([self.l_t_x, l_t_bow_X])
+		self.s_d_x = sps.hstack([self.s_d_x, s_d_bow_X])
+		self.l_d_x = sps.hstack([self.l_d_x, l_d_bow_X])
 
 
 ###########Set classifier type + parameters: ############################
