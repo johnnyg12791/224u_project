@@ -33,13 +33,11 @@ def raw_count_vectorizer(commentText, articleText):
 	return (probabilities(c_dict), probabilities(a_dict))
 
 #Vectorize and score based only on overlap of proper nouns.
-def proper_noun_vectorizer(commentText, articleText):
+def proper_noun_vectorizer(commentText, articleText, articleURL):
 	#Pre-process text:
 	comments = process(commentText)
-	articles = process(articleText)
 	#Extract proper nouns:
 	comment_tagged = pos_tag(comments[0].split())
-	article_tagged = pos_tag(articles[0].split())
 
 	#comment_nnps = [word for word,pos in comment_tagged if pos == 'NN' or pos =='NP']
 	#article_nnps = [word for word,pos in article_tagged if pos == 'NN' or pos =='NP']
@@ -50,10 +48,15 @@ def proper_noun_vectorizer(commentText, articleText):
 			comment_nnps += u" " + word
 
 	article_nnps = u""
-	for word, pos in article_tagged:
-		if pos == 'NN' or pos =='NP':
-			article_nnps += u" " + word
-
+	if articleURL in article_metas:
+		article_nnps = article_metas[articleURL]
+	else:
+		articles = process(articleText)
+		article_tagged = pos_tag(articles[0].split())
+		for word, pos in article_tagged:
+			if pos == 'NN' or pos =='NP':
+				article_nnps += u" " + word
+		article_metas[articleURL] = article_nnps
 
 	#Vectorize and return proper nouns:
 	vectorizer = fe.text.CountVectorizer()
@@ -74,14 +77,14 @@ def KL_score(c_probs, a_probs):
 
 
 #Calculate KL divergence based on given probability distributions
-def KL_divergence(comment_text, article_text):
+def KL_divergence(comment_text, article_text, a_url):
 	#Raw score:
 	c_probs, a_probs = raw_count_vectorizer(comment_text, article_text)
 	raw_score = KL_score(c_probs, a_probs)
 	
 	#raw_score = scipy.stats.entropy(c_probs.data, qk=a_probs.data)
 	#Noun-only score
-	c_probs, a_probs = proper_noun_vectorizer(comment_text, article_text)
+	c_probs, a_probs = proper_noun_vectorizer(comment_text, article_text, a_url)
 	noun_score = KL_score(c_probs, a_probs)
 	return raw_score, noun_score
 
@@ -89,21 +92,26 @@ def KL_divergence(comment_text, article_text):
 
 
 ##DB setup:
-db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/all_comms_basic_feat_backup_may27.db")
+db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/may31_day.db")
 loop_cursor = db.cursor()
 setter_cursor = db.cursor()
 count = 0
+article_metas = {}
 
-get_fulltext_no_repeats_query = "SELECT c.CommentID, CommentText, FullText, KLDistance FROM ArticleText a, Comments c, Features f WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND f.KLDistance IS NULL "
-get_fulltexts_query = "SELECT CommentID, CommentText, FullText FROM ArticleText a, Comments c WHERE c.ArticleURL=a.URL"
-#for c_id, c_text, a_text in loop_cursor.execute(get_fulltexts_query):
-for c_id, c_text, a_text, klD in loop_cursor.execute(get_fulltext_no_repeats_query):
+#get_fulltext_no_repeats_query = "SELECT c.CommentID, CommentText, FullText, KLDistance FROM ArticleText a, Comments c, Features f WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND f.KLDistance IS NULL "
+get_fulltext_norepeats_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL FROM ArticleText a, Comments c, Features f WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND f.KLDistance IS NULL"
+#get_fulltexts_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL FROM ArticleText a, Comments c WHERE c.ArticleURL=a.URL"
+for c_id, c_text, a_text, a_url in loop_cursor.execute(get_fulltext_norepeats_query):
+#for c_id, c_text, a_text, a_url, klD in loop_cursor.execute(get_fulltext_no_repeats_query):
 	if len(c_text) > 0 and len(a_text) > 0: #Check haven't already added kl distance
-		raw_kl, noun_kl = KL_divergence([c_text], [a_text])
-		print "Raw: %f; Nouns: %f: commentID = %d" % (raw_kl, noun_kl, c_id)
+		raw_kl, noun_kl = KL_divergence([c_text], [a_text], a_url)
+#		print "Raw: %f; Nouns: %f: commentID = %d" % (raw_kl, noun_kl, c_id)
 		setter_cursor.execute("UPDATE Features SET KLDistance = ?, KLDistance_Nouns = ? WHERE CommentID = ?", (raw_kl, noun_kl, c_id))
 		count += 1
-		if count % 10 == 0:
+		if count % 100 == 0:
+			print "+100"
+		if count % 1000 == 0:
+			print "Added %d; still chugging" % count 
 			db.commit()
 
 #DB takedown:
