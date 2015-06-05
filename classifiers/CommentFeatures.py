@@ -675,6 +675,48 @@ class CommentFeatures():
 		#Save results to CSV
 		self.save_results(t_acc, d_acc)
 
+	def useEnsemble(self):
+		print "Starting Ensemble"
+		print "Classifying with LinearSVM"
+		self.classifier = svm.LinearSVC(C=.5, dual=False)#, class_weight="auto")
+		self.classifier.fit(self.t_x, self.t_y)
+		predict_train_1 = self.classifier.predict(self.t_x)
+		predict_dev_1 = self.classifier.predict(self.d_x)
+
+		print "Classifying with SVM + PolyKernel"
+		self.classifier = svm.SVC(C=.5)
+		#self.classifier = RandomForestClassifier()
+		self.classifier.fit(self.t_x, self.t_y)
+		predict_train_2 = self.classifier.predict(self.t_x)
+		predict_dev_2 = self.classifier.predict(self.d_x)
+
+		print "Classifying with SGD"
+		self.classifier = linear_model.SGDClassifier()
+		#self.classifier = RandomForestClassifier()
+		self.classifier.fit(self.t_x, self.t_y)
+		predict_train_3 = self.classifier.predict(self.t_x)
+		predict_dev_3 = self.classifier.predict(self.d_x)
+
+		print "Creating Ensemble"
+		#Dividing by 2 has the effect of selecting the majority
+		predict_train = (predict_train_1 + predict_train_2 + predict_train_3) / 2
+		predict_dev = (predict_dev_1 + predict_dev_2 + predict_dev_3) / 2
+		print "Classified %d samples, using %d features" % self.t_x.shape
+		print "Training accuracy:"
+		t_acc = self.f1_accuracy(predict_train, self.t_y)
+		self.p_r_f_s(self.t_y, predict_train)
+		
+		print "Classification report:"
+		self.classification_report(predict_train, self.t_y)
+		print "Dev accuracy:"
+		d_acc = self.f1_accuracy(predict_dev, self.d_y)
+		self.p_r_f_s(self.d_y, predict_dev)
+		
+		print "Classification report:"
+		self.classification_report(predict_dev, self.d_y)
+		#Save results to CSV
+		self.save_results(t_acc, d_acc, ensemble=True)
+
 	def classifyOnSplit(self):
 		print "Starting dual classifiers..."
 		self.classifier1.fit(self.s_t_x, self.s_t_y)

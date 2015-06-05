@@ -29,15 +29,15 @@ cf = CommentFeatures()
 cf.limitNumComments(50000) #50,000 samples will be our default "small" size
 cf.setEditorPicksProportion(0.5, 0.5) #Start with a 50/50 editor/non-editor split
 cf.setVerbose()
-cf.setFeaturesQuery(stem_jac_feat)
+cf.setFeaturesQuery(basic_af)
 cf.zeroBlankColumns()
 #cf.preprocessText()
 #cf.setResultsFile("results.csv") ##JOHN-- pulled this out of "classify"
 
 
 ##############Query the database to make feature vectors/clean data:
-#cf.featureModel()
-cf.featuresAndCommentWordsModel(maxNgram=2)
+cf.featureModel()
+#cf.featuresAndCommentWordsModel(maxNgram=2)
 #cf.recursiveFeatureElimination()
 #cf.bagOfWordsModel()
 #cf.calcPCA()
@@ -50,12 +50,15 @@ cf.setLinearSVM(C_val=.5, penalty='l1', dual=False)
 #cf.useCVSearch()
 #cf.setRandomForest()
 #cf.useNeuralNetwork() #Recommend: low # features
-cf.useTwoClassifiers()
+#cf.useTwoClassifiers()
 
 
 ##############Perform the classification step, show metrics:
-cf.classify()
+#cf.classify()
+cf.useEnsemble()
 #cf.classifyOnSplit()
+
+##############Visualization of results:
 #cf.visualize_tsne()
 #Can only use this with a Linear Kernel
 #Note: to see topNCoefficients, must include CommentText and CommentID in select query
