@@ -51,7 +51,8 @@ def add_similarity_metric(database):
 
         counter += 1
         if counter % 100 == 0:
-            print("*"),
+            sys.stdout.write("*")
+            sys.stdout.flush()
             if counter % 1000 == 0:
                 database.commit()
                 print "\n Have added %d/%d scores" % (counter, initial_togo)
@@ -135,7 +136,7 @@ def author_name_in_comment(c_vec, a_name):
 
 
 #Method: get_first_sentence_features
-#def get_first_sentence_features(c_text, a_text):
+def get_first_sentence_features(c_text, a_text):
 
 
 

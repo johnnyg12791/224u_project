@@ -7,6 +7,7 @@ import numpy as np
 import scipy.sparse as ss
 import string
 import re 
+import sys
 ##TODO: alphabetize imports
 
 #Return the probabilities of each word in the vector
@@ -112,7 +113,8 @@ for c_id, c_text, a_text, a_url in loop_cursor.execute(get_fulltext_norepeats_qu
 		setter_cursor.execute("UPDATE Features SET KLDistance = ?, KLDistance_Nouns = ? WHERE CommentID = ?", (raw_kl, noun_kl, c_id))
 		count += 1
 		if count % 100 == 0:
-			print("."),
+			sys.stdout.write(".")
+			sys.stdout.flush()
 		if count % 1000 == 0:
 			print "Added %d; %d lef" % (count+count_already, count_togo - count)
 			db.commit()
