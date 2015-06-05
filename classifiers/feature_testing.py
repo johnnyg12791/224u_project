@@ -1,6 +1,9 @@
 from CommentFeatures import CommentFeatures
  
 
+baseline_features = "SELECT Jaccard, skipgrams_2, skipgrams_3, Cosine, avg_sentence_len, n_chars, CommentID, EditorSelection FROM Features"
+
+
 ##############Initialize features model:
 cf = CommentFeatures()
 
@@ -9,7 +12,7 @@ cf = CommentFeatures()
 cf.limitNumComments(50000) #50,000 samples will be our default "small" size
 cf.setEditorPicksProportion(0.5, 0.5) #Start with a 50/50 editor/non-editor split
 cf.setVerbose()
-cf.setFeaturesQuery(basic_af)
+cf.setFeaturesQuery(baseline_features)
 cf.zeroBlankColumns()
 #cf.preprocessText()
 #cf.setResultsFile("results.csv") ##JOHN-- pulled this out of "classify"
@@ -17,7 +20,7 @@ cf.zeroBlankColumns()
 
 ##############Query the database to make feature vectors/clean data:
 cf.featureModel()
-#cf.featuresAndCommentWordsModel(maxNgram=2)
+#cf.featuresAndCommentWordsModel(maxNgram=1)
 #cf.recursiveFeatureElimination()
 #cf.bagOfWordsModel()
 #cf.calcPCA()
@@ -25,7 +28,7 @@ cf.featureModel()
 
 ##############Choose classifier: (Choose ONE)
 #cf.setSGD()
-cf.setLinearSVM(C_val=.5, penalty='l1', dual=False)
+cf.setLinearSVM(C_val=.5)
 #cf.setKernelSVM("poly")
 #cf.useCVSearch()
 #cf.setRandomForest()
@@ -35,8 +38,9 @@ cf.setLinearSVM(C_val=.5, penalty='l1', dual=False)
 
 ##############Perform the classification step, show metrics:
 #cf.classify()
-cf.useEnsemble()
+#cf.useEnsemble()
 #cf.classifyOnSplit()
+cf.classifyKValidation(k=3, verbose=True)
 
 ##############Visualization of results:
 #cf.visualize_tsne()

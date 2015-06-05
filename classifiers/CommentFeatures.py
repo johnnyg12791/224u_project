@@ -122,8 +122,10 @@ class CommentFeatures():
 	#editor pick and non-editor pick train and dev data.
 	#The postCondition paremeter refers to whether the passed query already has a "WHERE"
 	#condition included (such as SELECT * WHERE c.ID = f.ID). In this case, must append "ANDS"
-	def createSelectStatements(self, statement, postCondition=False):
-		if postCondition:
+	def createSelectStatements(self, statement):
+		#Check if statement was created using a postcondition (in which case, don't use AND)
+		postCondition = string.find(statement, "WHERE")
+		if postCondition > -1:
 			self.trainSelectQueryEditorPick =  statement + " AND f.TrainTest =1 AND f.EditorSelection = 1"
 			self.trainSelectQueryNonEditorPick = statement + " AND f.TrainTest =1 AND f.EditorSelection = 0"
 			self.devSelectQueryEditorPick = statement + " AND f.TrainTest =2 AND f.EditorSelection = 1"
@@ -146,7 +148,7 @@ class CommentFeatures():
 	#The t_x and d_x parameters are in case you are going to run another features set
 	#after bag of words; in which case, you will want to vectorize these vectors separately.
 	def getCommentsBagOfWords(self, t_x, d_x, returnCommentIDs=False):
-		self.createSelectStatements(self.selectStatement, postCondition=True)
+		self.createSelectStatements(self.selectStatement)
 		#Create list of comment IDs for feature extraction: 
 		t_commentIDs = [] 
 		d_commentIDs = []
@@ -266,8 +268,8 @@ class CommentFeatures():
 	#t_y and d_y to be the gold labels. Note that this relies on passing the model a
 	#feature selection query, and must have first thing you request be comment ID.
 	#The split parameter is for splitting our input based on some feature.
-	def getCommentFeatures(self, postCondition=False):
-		self.createSelectStatements(self.featureSelectionQuery, postCondition)
+	def getCommentFeatures(self):
+		self.createSelectStatements(self.featureSelectionQuery)
 
 		#Train and dev bag of words representations
 		t_bow_X = []
@@ -378,7 +380,7 @@ class CommentFeatures():
 		self.s_d_ID = []
 		self.l_d_ID = []
 
-		self.createSelectStatements(self.featureSelectionQuery, postCondition=True)
+		self.createSelectStatements(self.featureSelectionQuery)
 
 		#Train and dev bag of words representations
 		s_t_bow_X = []
@@ -523,7 +525,7 @@ class CommentFeatures():
 	#A model based on extracted features, running bag of words on the comments.
 	def featuresAndCommentWordsModel(self, tfidf=True, maxNgram=1):
 
-		bow_t_x, bow_d_x = self.getCommentFeatures(postCondition=True)
+		bow_t_x, bow_d_x = self.getCommentFeatures()
 
 		ngram_size = (1, maxNgram)
 
@@ -736,6 +738,9 @@ class CommentFeatures():
 		print "Long dev:"
 		self.classification_report(self.l_d_y, long_predict_dev)
 
+	#Method: makeNamesList
+	#Returns the names associated with features at given index in the
+	#classifier's attributes matrix.
 	def makeNamesList(self):
 		feature_names = []
 		feature_names.extend(self.vectorizer.get_feature_names())
@@ -755,6 +760,37 @@ class CommentFeatures():
 		tops = heapq.nlargest(numTop, enumerate(weights[0]), key=lambda x: abs(x[1])) #Use absolute magnitude of weight as key
 		for item in tops:
 		    print "Item " + names[item[0]].encode('utf-8') + " has weight " + str(item[1])
+
+    #Method: classifyKValidation
+    #Run a given classifier k times, returns an average of its outputs for 6 categories:
+    #train & dev precision, recall, and f1. Prints these quantities out, as well as variance.
+	def classifyKValidation(self, k=3, verbose=False):
+		accuracies = np.zeros((k, 6))
+		for i in range(k):
+			self.classifier.fit(self.t_x, self.t_y)
+			predict_train = self.classifier.predict(self.t_x)
+			predict_dev = self.classifier.predict(self.d_x)
+
+			if verbose:
+				print "Train:"
+				print me.classification_report(self.t_y, predict_train)
+				print "Dev:"
+				print me.classification_report(self.d_y, predict_dev)
+
+			p, r, f, s = me.precision_recall_fscore_support(self.t_y, predict_train, average='macro')
+			print p
+			print r
+			accuracies[i][0] = p
+			accuracies[i][1] = r
+			accuracies[i][2] = f
+			p, r, f, s = me.precision_recall_fscore_support(self.d_y, predict_dev, average='macro')
+			accuracies[i][3] = p
+			accuracies[i][4] = r
+			accuracies[i][5] = f
+
+		avg_accuracies = np.mean(accuracies, axis=0)
+		print "Average train precision=%.3f, recall=%.3f, F1=%.3f \n Average dev precision=%.3f, recall=%.3f, F1=%.3f" % (avg_accuracies[0], avg_accuracies[1], avg_accuracies[2], avg_accuracies[3], avg_accuracies[4], avg_accuracies[5])
+		    
 
 ##########Accuracy and Results: ##########################################
 
