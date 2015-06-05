@@ -18,61 +18,15 @@ def make_sure_feature_in_db(cursor, feature_name):
         cursor.execute("ALTER TABLE Features ADD COLUMN %s REAL" % feature_name)
 
 
-############## Select feature adding model: ###############################
-
-#Method: updated_add_similarity_metric
-#Updated method of add_similarity_metric that iterates through DB with a single cursor loop.
-#Includes support for using a cutoff number of reviews (defined immediately above main)
-def add_multiple_similarity_metrics(database):
-    #loop cursor
-    cursor = database.cursor()
-    #insertion cursor
-    set_cursor = database.cursor()
-    make_sure_feature_in_db(cursor, "skipgrams_2")
-    make_sure_feature_in_db(cursor, "skipgrams_3")
-
-    #auxillary info
-    counter = 0
-    metadata = {}
-
-    #Loop through all reviews
-    #get_fulltexts_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL FROM ArticleText a, Comments c WHERE c.ArticleURL=a.URL"
-    #for c_id, c_text, a_text, a_url in cursor.execute(get_fulltexts_query):
-    fulltext_no_repeats_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL FROM ArticleText a, Comments c, Features f WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND f.skipgrams_3 IS NULL"
-    fulltext_no_repeats_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL FROM ArticleText a, Comments c, Features f WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND f.skipgrams_3 IS NULL"
-    for c_id, c_text, a_text, a_url in cursor.execute(fulltext_no_repeats_query):
-
-        c_vec = word_vec(c_text)
-        a_vec = word_vec(a_text)
-        
-        #Add 2-skipgrams
-        skip2_similarity = jaccard_similarity_skipgrams(c_vec, a_vec, a_url, 2, skipgram2_metadata)
-        #Add 3-skipgrams
-        skip3_similarity = jaccard_similarity_skipgrams(c_vec, a_vec, a_url, 3, skipgram3_metadata)
-
-        insert_statement = ("UPDATE Features SET skipgrams_2 = %f, skipgrams_3 = %f WHERE CommentID = %d" % (skip2_similarity, skip3_similarity, c_id))
-        set_cursor.execute(insert_statement)
-
-        counter += 1
-        if counter % 1000 == 0:
-            database.commit()
-            print "Have added %d scores" % counter
-        #if counter > cutoffNum: break
-
-    set_cursor.close()
-    cursor.close()
-    database.commit()
-
-
 #Method: add_similarity_metric
 #Updated method of add_similarity_metric that iterates through DB with a single cursor loop.
 #Includes support for using a cutoff number of reviews (defined immediately above main)
-def add_similarity_metric(database, feat_name, feat_fxn):
+def add_similarity_metric(database):
     #loop cursor
     cursor = database.cursor()
     #insertion cursor
     set_cursor = database.cursor()
-    make_sure_feature_in_db(cursor, feat_name)
+    make_sure_feature_in_db(cursor, "author_in_text")
 
     #auxillary info
     counter = 0
@@ -81,26 +35,26 @@ def add_similarity_metric(database, feat_name, feat_fxn):
     #Loop through all reviews
     #get_fulltexts_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL FROM ArticleText a, Comments c WHERE c.ArticleURL=a.URL"
     #for c_id, c_text, a_text, a_url in cursor.execute(get_fulltexts_query):
-    count = cursor.execute("SELECT COUNT(*) FROM Features WHERE stem_jaccard IS NULL").fetchone()
 
-    fulltext_no_repeats_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL FROM ArticleText a, Comments c, Features f WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND f.stem_jaccard IS NULL"
-    for c_id, c_text, a_text, a_url in cursor.execute(fulltext_no_repeats_query):
-
+    initial_togo = cursor.execute("SELECT COUNT(*) FROM Features WHERE stem_jaccard IS NULL").fetchone()[0]
+    #text_name_query = "SELECT c.CommentText, a.Author FROM Comments c, Articles a WHERE c.ArticleURL = a.URL "
+    fulltext_no_repeats_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL, u.Author FROM ArticleText a, Comments c, Features f, Articles u WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND a.URL = u.URL"
+    for c_id, c_text, a_text, a_url, a_name in cursor.execute(fulltext_no_repeats_query):
         c_vec = word_vec(c_text)
         a_vec = word_vec(a_text)
         
         #Compute feature:
-        feat = feat_fxn(c_vec, a_vec, a_url, metadata)
+        num_name = author_name_in_comment(c_vec, a_name)
 
-        insert_statement = ("UPDATE Features SET %s = %f WHERE CommentID = %d" % (feat_name, feat, c_id))
-        set_cursor.execute(insert_statement)
+        insert_statement = ("UPDATE Features SET author_in_text = %f WHERE CommentID = %d" % (num_name, c_id))
+        #set_cursor.execute(insert_statement)
 
         counter += 1
         if counter % 100 == 0:
-            print(".")
+            print("*"),
             if counter % 1000 == 0:
                 database.commit()
-                print "Have added %d/%d scores" % (counter, count[0])
+                print "\n Have added %d/%d scores" % (counter, initial_togo)
         if counter > cutoffNum: break
 
     set_cursor.close()
@@ -173,22 +127,25 @@ def stem_jaccard_sim(x, y, a_url, metaD):
 #Method: author_name_in_comment
 #Returns the number of occurrences of the authors (first or last) name in the comment
 #text.
-def author_name_in_comment(c_text, a_name):
-    occurrs = Counter(c_text)
-    num_o = occurrs[a_name] + occurrs[a_name.split()[0]] + occurrs[a_name].split()[-1]]
-    if num_o > 0:
-        print num_o
-        print c_text 
-    return num_o
+def author_name_in_comment(c_vec, a_name):
+    if len(a_name) < 1: return 0
+    a_name = a_name.lower()
+    occurrs = Counter(c_vec)
+    return occurrs[a_name.split()[0]] + occurrs[a_name.split()[-1]]
+
+
+#Method: get_first_sentence_features
+#def get_first_sentence_features(c_text, a_text):
+
 
 
 
 ######### Main: ####################################################
 
 def main():
-    database = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/jun3.db")
+    database = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/jun4.db")
 
-    add_similarity_metric(database, "stem_jaccard", stem_jaccard_sim)
+    add_similarity_metric(database)
 
     database.close()
 
