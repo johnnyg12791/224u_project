@@ -16,7 +16,7 @@ nn_features = "SELECT num_1_letter_words, skipgrams_3, n_sentences, EditorSelect
 
 #'SELECT f.n_sentences, nltk.POS, FROM Features f, nltk_features nltk JOIN '
 #Initialize features model:
-poly_features = "SELECT KLDistance, KLDistance_Nouns, Jaccard, polarity, n_exclamations, Cosine, n_questions, n_words, perc_1_char_words, perc_2_5_letter_words, perc_6_9_letter_words, perc_10_14_letter_words, perc_15plus_letter_words, JJR, RP, UH, VBD, POS, EX, RBS, PDT, NNPS, FW, LS, skipgrams_3, skipgrams_2, CommentID, EditorSelection FROM Features "
+poly_features = "SELECT KLDistance, KLDistance_Nouns, Jaccard, stem_jaccard, polarity, n_exclamations, Cosine, n_questions, n_words, perc_1_char_words, perc_2_5_letter_words, perc_6_9_letter_words, perc_10_14_letter_words, perc_15plus_letter_words, JJR, RP, UH, VBD, POS, EX, RBS, PDT, NNPS, FW, LS, skipgrams_3, skipgrams_2, CommentID, EditorSelection FROM Features "
 poly_features_bow = "SELECT KLDistance, KLDistance_Nouns, Jaccard, polarity, n_exclamations, Cosine, n_questions, n_words, perc_1_char_words, perc_2_5_letter_words, perc_6_9_letter_words, perc_10_14_letter_words, perc_15plus_letter_words, JJR, RP, UH, VBD, POS, EX, RBS, PDT, NNPS, FW, LS, skipgrams_3, skipgrams_2, c.CommentID, c.EditorSelection, CommentText FROM Features f, Comments c, Articles a WHERE f.CommentID = c.CommentID AND a.Section = 'World' AND a.URL = c.ArticleURL "
 nltk_feats = "SELECT WRB, JJR, RP, UH, VBD, POS, EX, RBS, PDT, NNPS, FW, LS, EditorSelection FROM Features "
 one_feat = "SELECT Jaccard, c.CommentID, c.EditorSelection, c.CommentText FROM Features f, Comments c WHERE c.CommentID = f.CommentID "
@@ -41,23 +41,25 @@ cf.featuresAndCommentWordsModel(maxNgram=2)
 #cf.recursiveFeatureElimination()
 #cf.bagOfWordsModel()
 #cf.calcPCA()
-
+#cf.splitClassifierModel(splitOn=200)
 
 ##############Choose classifier: (Choose ONE)
 #cf.setSGD()
-cf.setLinearSVM(C_val=.5)
+cf.setLinearSVM(C_val=.5, penalty='l1', dual=False)
 #cf.setKernelSVM("poly")
 #cf.useCVSearch()
 #cf.setRandomForest()
 #cf.useNeuralNetwork() #Recommend: low # features
+cf.useTwoClassifiers()
 
 
 ##############Perform the classification step, show metrics:
 cf.classify()
+#cf.classifyOnSplit()
 #cf.visualize_tsne()
 #Can only use this with a Linear Kernel
 #Note: to see topNCoefficients, must include CommentText and CommentID in select query
-cf.topNCoefficients(30) #Check to see which coefficients are assigned highest classification weight
+#cf.topNCoefficients(30) #Check to see which coefficients are assigned highest classification weight
 #cf.viewMisclassifiedReviews()
 
 ##############Close up the database, cursors, etc

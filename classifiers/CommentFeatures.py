@@ -321,7 +321,7 @@ class CommentFeatures():
 		#Return train and dev bag of words representations
 		return t_bow_X, d_bow_X
 
-	def featureDictSplitClassifier(self, query, cutoffNumComments, vectorizeBOW=False):
+	def featureDictSplitClassifier(self, query, cutoff, vectorizeBOW=False, splitOn=20):
 		short_X = []
 		short_bow = []
 		long_X = []
@@ -342,7 +342,7 @@ class CommentFeatures():
 
 			commentText = feature_dict.pop("CommentText")
 			length_comment = len(commentText.split())
-			if length_comment > 20:
+			if length_comment > splitOn:
 				long_Y.append(feature_dict.pop("EditorSelection"))
 				long_IDS.append(feature_dict.pop("CommentID"))
 				long_bow.append(commentText)
@@ -363,9 +363,22 @@ class CommentFeatures():
 	#t_y and d_y to be the gold labels. Note that this relies on passing the model a
 	#feature selection query, and must have first thing you request be comment ID.
 	#The split parameter is for splitting our input based on some feature.
-	def getCommentsSplitClassifier(self):
+	def getCommentsSplitClassifier(self, splitOn):
 
-		self.createSelectStatements(self.featureSelectionQuery, postCondition)
+		self.s_t_x = []
+		self.l_t_x = []
+		self.s_d_x = []
+		self.l_d_x = []
+		self.s_t_y = []
+		self.l_t_y = []
+		self.s_d_y = []
+		self.l_d_y = []
+		self.s_t_ID = []
+		self.l_t_ID = []
+		self.s_d_ID = []
+		self.l_d_ID = []
+
+		self.createSelectStatements(self.featureSelectionQuery, postCondition=True)
 
 		#Train and dev bag of words representations
 		s_t_bow_X = []
@@ -374,13 +387,13 @@ class CommentFeatures():
 		l_d_bow_X = []
 
 		#Train, editor
-		short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS = self.makeFeatureDict(
-			self.trainSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicksTrain)
+		short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS = self.featureDictSplitClassifier(
+			self.trainSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicksTrain, splitOn)
 
 		self.s_t_x.extend(short_X)
 		self.l_t_x.extend(long_X)
 		self.s_t_y.extend(short_Y)
-		self.l_t_s.extend(long_Y)
+		self.l_t_y.extend(long_Y)
 		s_t_bow_X.extend(short_bow)
 		l_t_bow_X.extend(long_bow)
 		self.s_t_ID.extend(short_bow)
@@ -390,12 +403,12 @@ class CommentFeatures():
 			print "Created training/editor pick vectors"
 
 		#Train, non-editor
-		short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS = self.makeFeatureDict(
-			self.trainSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicksTrain))
+		short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS = self.featureDictSplitClassifier(
+			self.trainSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicksTrain), splitOn)
 		self.s_t_x.extend(short_X)
 		self.l_t_x.extend(long_X)
 		self.s_t_y.extend(short_Y)
-		self.l_t_s.extend(long_Y)
+		self.l_t_y.extend(long_Y)
 		s_t_bow_X.extend(short_bow)
 		l_t_bow_X.extend(long_bow)
 		self.s_t_ID.extend(short_bow)
@@ -405,12 +418,12 @@ class CommentFeatures():
 			print "Created training/non-editor pick vectors"
 
 		#Dev, editor
-		short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS = self.makeFeatureDict(
-			self.devSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicksDev)
+		short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS = self.featureDictSplitClassifier(
+			self.devSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicksDev, splitOn)
 		self.s_d_x.extend(short_X)
 		self.l_d_x.extend(long_X)
 		self.s_d_y.extend(short_Y)
-		self.l_d_s.extend(long_Y)
+		self.l_d_y.extend(long_Y)
 		s_d_bow_X.extend(short_bow)
 		l_d_bow_X.extend(long_bow)
 		self.s_d_ID.extend(short_bow)
@@ -421,12 +434,12 @@ class CommentFeatures():
 			print "Created dev/editor pick vectors"
 
 		#Dev, non-editor
-		short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS = self.makeFeatureDict(
-			self.devSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicksDev))
+		short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS = self.featureDictSplitClassifier(
+			self.devSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicksDev), splitOn)
 		self.s_d_x.extend(short_X)
 		self.l_d_x.extend(long_X)
 		self.s_d_y.extend(short_Y)
-		self.l_d_s.extend(long_Y)
+		self.l_d_y.extend(long_Y)
 		s_d_bow_X.extend(short_bow)
 		l_d_bow_X.extend(long_bow)
 		self.s_d_ID.extend(short_bow)
@@ -535,8 +548,8 @@ class CommentFeatures():
 
 	#Method: splitClassifierModel
 	#Model which runs two classifiers
-	def splitClassifierModel(self, tfidf=True, maxNgram=1):
-		s_t_bow_X, l_t_bow_X, s_d_bow_X, l_d_bow_X = getCommentsSplitClassifier()
+	def splitClassifierModel(self, tfidf=True, maxNgram=1, splitOn=20):
+		s_t_bow_X, l_t_bow_X, s_d_bow_X, l_d_bow_X = self.getCommentsSplitClassifier(splitOn)
 		ngram_size = (1, maxNgram)
 
 		if tfidf:
@@ -566,8 +579,8 @@ class CommentFeatures():
 
 	#Method: setLinearSVM
 	#Sets classifier to be very basic linear SVM
-	def setLinearSVM(self, C_val=.1):
-		self.classifier = svm.LinearSVC(C=C_val)
+	def setLinearSVM(self, C_val=.1, penalty='l2', dual=True):
+		self.classifier = svm.LinearSVC(C=C_val, penalty=penalty, dual=dual)
 		print "Using linear SVM with C=%.3f" % C_val
 
 	#Method: setSGD
@@ -621,6 +634,13 @@ class CommentFeatures():
 		#Make classifier a pipeline
 		self.classifier = Pipeline(steps=[('rbm', rbm), ('logistic', logistic)])
 
+	#Method: useTwoClassifiers
+	#Use 2 classifiers splitting on review length. Note that in order to use this classification
+	#scheme you must have called "splitClassifierModel"
+	def useTwoClassifiers(self):
+		self.classifier1 = svm.LinearSVC(C=.5)
+		self.classifier2 = svm.LinearSVC(C=.5)
+
 
 ###########Classification step: ##########################################
 
@@ -654,6 +674,25 @@ class CommentFeatures():
 
 		#Save results to CSV
 		self.save_results(t_acc, d_acc)
+
+	def classifyOnSplit(self):
+		print "Starting dual classifiers..."
+		self.classifier1.fit(self.s_t_x, self.s_t_y)
+		self.classifier2.fit(self.l_t_x, self.l_t_y)
+
+		short_predict_train = self.classifier1.predict(self.s_t_x)
+		long_predict_train = self.classifier2.predict(self.l_t_x)
+		short_predict_dev = self.classifier1.predict(self.s_d_x)
+		long_predict_dev = self.classifier2.predict(self.l_d_x)
+
+		print "Short train:"
+		self.classification_report(self.s_t_y, short_predict_train)
+		print "Short dev:"
+		self.classification_report(self.s_d_y, short_predict_dev)
+		print "Long train:"
+		self.classification_report(self.l_t_y, long_predict_train)
+		print "Long dev:"
+		self.classification_report(self.l_d_y, long_predict_dev)
 
 	def makeNamesList(self):
 		feature_names = []
