@@ -7,7 +7,7 @@ from collections import Counter
 from nltk.stem.porter import *
 
 
-def make_sure_feature_in_db(cursor, feature_name):
+def make_sure_feature_in_db(cursor, feature_nam=e):
     cursor.execute("SELECT * FROM Features LIMIT 1")
     list_of_features = {description[0] for description in cursor.description}
     if(feature_name not in list_of_features):

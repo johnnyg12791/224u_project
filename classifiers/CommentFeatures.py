@@ -777,19 +777,20 @@ class CommentFeatures():
 				print "Dev:"
 				print me.classification_report(self.d_y, predict_dev)
 
-			p, r, f, s = me.precision_recall_fscore_support(self.t_y, predict_train, average='macro')
-			print p
-			print r
+			p, r, f, s = me.precision_recall_fscore_support(self.t_y, predict_train, average='micro')
 			accuracies[i][0] = p
 			accuracies[i][1] = r
 			accuracies[i][2] = f
-			p, r, f, s = me.precision_recall_fscore_support(self.d_y, predict_dev, average='macro')
+			p, r, f, s = me.precision_recall_fscore_support(self.d_y, predict_dev, average='micro')
 			accuracies[i][3] = p
 			accuracies[i][4] = r
 			accuracies[i][5] = f
 
 		avg_accuracies = np.mean(accuracies, axis=0)
 		print "Average train precision=%.3f, recall=%.3f, F1=%.3f \n Average dev precision=%.3f, recall=%.3f, F1=%.3f" % (avg_accuracies[0], avg_accuracies[1], avg_accuracies[2], avg_accuracies[3], avg_accuracies[4], avg_accuracies[5])
+		std_variance = np.std(accuracies, axis=0)
+		print "Variance looked like:"
+		print std_variance
 		    
 
 ##########Accuracy and Results: ##########################################

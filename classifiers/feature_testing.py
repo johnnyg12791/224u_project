@@ -1,7 +1,7 @@
 from CommentFeatures import CommentFeatures
  
 
-baseline_features = "SELECT Jaccard, skipgrams_2, skipgrams_3, Cosine, avg_sentence_len, n_chars, CommentID, EditorSelection FROM Features"
+baseline_features = "SELECT Jaccard, skipgrams_2, skipgrams_3, Cosine, avg_sentence_len, n_chars, c.CommentID, c.EditorSelection, CommentText FROM Features f, Comments c WHERE c.CommentID = f.CommentID "
 
 
 ##############Initialize features model:
@@ -19,8 +19,8 @@ cf.zeroBlankColumns()
 
 
 ##############Query the database to make feature vectors/clean data:
-cf.featureModel()
-#cf.featuresAndCommentWordsModel(maxNgram=1)
+#cf.featureModel()
+cf.featuresAndCommentWordsModel(maxNgram=1)
 #cf.recursiveFeatureElimination()
 #cf.bagOfWordsModel()
 #cf.calcPCA()

@@ -1,11 +1,14 @@
 import sqlite3
 import os
 import sys
+import re
 import time
 import string
 from collections import Counter
 from nltk.tag import pos_tag
 from nltk.stem.porter import *
+from textblob import TextBlob
+import math
 
 ############### Copied from addSingleFeature.py #############################
 
@@ -27,6 +30,12 @@ def add_similarity_metric(database):
     #insertion cursor
     set_cursor = database.cursor()
     make_sure_feature_in_db(cursor, "author_in_text")
+    make_sure_feature_in_db(cursor, "first_sentence_jaccard")
+    make_sure_feature_in_db(cursor, "first_sentence_cosine")
+    make_sure_feature_in_db(cursor, "polarity_dif")
+    make_sure_feature_in_db(cursor, "subjectivity_dif")
+
+
 
     #auxillary info
     counter = 0
@@ -36,7 +45,7 @@ def add_similarity_metric(database):
     #get_fulltexts_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL FROM ArticleText a, Comments c WHERE c.ArticleURL=a.URL"
     #for c_id, c_text, a_text, a_url in cursor.execute(get_fulltexts_query):
 
-    initial_togo = cursor.execute("SELECT COUNT(*) FROM Features WHERE stem_jaccard IS NULL").fetchone()[0]
+    initial_togo = cursor.execute("SELECT COUNT(*) FROM Features WHERE first_sentence_jaccard IS NULL").fetchone()[0]
     #text_name_query = "SELECT c.CommentText, a.Author FROM Comments c, Articles a WHERE c.ArticleURL = a.URL "
     fulltext_no_repeats_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL, u.Author FROM ArticleText a, Comments c, Features f, Articles u WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND a.URL = u.URL"
     for c_id, c_text, a_text, a_url, a_name in cursor.execute(fulltext_no_repeats_query):
@@ -45,9 +54,10 @@ def add_similarity_metric(database):
         
         #Compute feature:
         num_name = author_name_in_comment(c_vec, a_name)
+        s = get_first_sentence_features(c_text, a_text, a_url)
 
-        insert_statement = ("UPDATE Features SET author_in_text = %f WHERE CommentID = %d" % (num_name, c_id))
-        #set_cursor.execute(insert_statement)
+        insert_statement = ("UPDATE Features SET author_in_text = %f, first_sentence_jaccard = %f, first_sentence_cosine = %f, polarity_dif = %f, subjectivity_dif = %f WHERE CommentID = %d" % (num_name, s[0], s[1], s[2], s[3], c_id))
+        set_cursor.execute(insert_statement)
 
         counter += 1
         if counter % 100 == 0:
@@ -76,6 +86,16 @@ def jaccard_sim(x, y):
     union = float(len(set(x).union(set(y))))
     intersection = len(set(x).intersection(set(y)))
     return intersection/union
+
+#Method: cosine_sim
+def cosine_sim(x, y):
+    dot_product = 0
+    x_dict = Counter(x)
+    y_dict = Counter(y)
+    for key, value in x_dict.items():
+        dot_product += value * y_dict.get(key, 0)
+
+    return dot_product / float(len(x_dict) * len(y_dict) + 1)
 
 ########### Feature functions: ########################################
 
@@ -134,23 +154,47 @@ def author_name_in_comment(c_vec, a_name):
     occurrs = Counter(c_vec)
     return occurrs[a_name.split()[0]] + occurrs[a_name.split()[-1]]
 
+def grab_first_sentence(text):
+    return re.split(u'[.?!]', text)[0]
 
 #Method: get_first_sentence_features
-def get_first_sentence_features(c_text, a_text):
+def get_first_sentence_features(c_text, a_text, a_url):
+    first_sentence = grab_first_sentence(c_text)
+    first_sentence_vec = word_vec(first_sentence)
+    article = word_vec(a_text)
+    
+    first_sentence_jaccard = jaccard_sim(first_sentence_vec, article)
+    first_sentence_cosine = cosine_sim(first_sentence_vec, article)
 
+    #Note: sentiment analysis on first sentence was fairly useless; comparing
+    #with the whole comment text instead
+    comment_blob = TextBlob(c_text)
+    article_blob = None
+    if a_url in blob_cache:
+        article_blob = blob_cache[a_url]
+    else:
+        article_blob = TextBlob(a_text)
+        blob_cache[a_url] = article_blob
+
+    polarity_dif = abs(comment_blob.sentiment.polarity - article_blob.sentiment.polarity)
+    subjectivity_dif = abs(comment_blob.sentiment.subjectivity - article_blob.sentiment.subjectivity)
+    
+    return first_sentence_jaccard, first_sentence_cosine, polarity_dif, subjectivity_dif
 
 
 
 ######### Main: ####################################################
 
 def main():
-    database = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/jun4.db")
+    database = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/jun5.db")
 
     add_similarity_metric(database)
 
+    database.commit()
     database.close()
 
 verbose = True 
+blob_cache = {}
 cutoffNum = float("inf")
 if __name__ == "__main__":
     main()
