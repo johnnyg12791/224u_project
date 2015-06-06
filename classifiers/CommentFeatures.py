@@ -588,7 +588,7 @@ class CommentFeatures():
 	#Method: setSGD
 	#Set classifier to be SGD, with default settings
 	def setSGD(self):
-		self.classifier = linear_model.SGDClassifier()
+		self.classifier = linear_model.SGDClassifier(loss="log")
 		print "Using SGD classifier"
 
 	#Method: setKernalSVM

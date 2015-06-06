@@ -19,16 +19,16 @@ cf.zeroBlankColumns()
 
 
 ##############Query the database to make feature vectors/clean data:
-#cf.featureModel()
-cf.featuresAndCommentWordsModel(maxNgram=1)
+cf.featureModel()
+#cf.featuresAndCommentWordsModel(maxNgram=1)
 #cf.recursiveFeatureElimination()
 #cf.bagOfWordsModel()
 #cf.calcPCA()
 #cf.splitClassifierModel(splitOn=200)
 
 ##############Choose classifier: (Choose ONE)
-#cf.setSGD()
-cf.setLinearSVM(C_val=.5)
+cf.setSGD()
+#cf.setLinearSVM(C_val=.5)
 #cf.setKernelSVM("poly")
 #cf.useCVSearch()
 #cf.setRandomForest()

@@ -47,7 +47,7 @@ def add_similarity_metric(database):
 
     initial_togo = cursor.execute("SELECT COUNT(*) FROM Features WHERE first_sentence_jaccard IS NULL").fetchone()[0]
     #text_name_query = "SELECT c.CommentText, a.Author FROM Comments c, Articles a WHERE c.ArticleURL = a.URL "
-    fulltext_no_repeats_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL, u.Author FROM ArticleText a, Comments c, Features f, Articles u WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND a.URL = u.URL"
+    fulltext_no_repeats_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL, u.Author FROM ArticleText a, Comments c, Features f, Articles u WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND a.URL = u.URL AND author_in_text IS NULL "
     for c_id, c_text, a_text, a_url, a_name in cursor.execute(fulltext_no_repeats_query):
         c_vec = word_vec(c_text)
         a_vec = word_vec(a_text)
@@ -84,6 +84,8 @@ def word_vec(text):
 #Computes the Jaccard similarity between two vectors x and y
 def jaccard_sim(x, y):
     union = float(len(set(x).union(set(y))))
+    if union == 0:
+        return 0
     intersection = len(set(x).intersection(set(y)))
     return intersection/union
 
