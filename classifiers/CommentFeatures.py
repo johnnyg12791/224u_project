@@ -651,6 +651,9 @@ class CommentFeatures():
 
 ###########Classification step: ##########################################
 
+	#Method: useEnsemble
+	#Train and run 3 ensemble classifiers (linearSVM, random forest, and sgd). 
+	#Return EditorSelection iff all three agree.
 	def useEnsemble(self):
 		print "Starting Ensemble"
 
@@ -660,9 +663,9 @@ class CommentFeatures():
 		predict_train_1 = self.classifier.predict(self.t_x)
 		predict_dev_1 = self.classifier.predict(self.d_x)
 
-		print "Classifying with a Random Forest"
-		#self.classifier = svm.SVC(C=.5)
-		self.classifier = RandomForestClassifier()
+		print "Classifying with a Random Foreststers"
+		self.classifier = svm.LinearSVC(C=.5)
+		#self.classifier = RandomForestClassifier()
 		self.classifier.fit(self.t_x, self.t_y)
 		predict_train_2 = self.classifier.predict(self.t_x)
 		predict_dev_2 = self.classifier.predict(self.d_x)
@@ -679,12 +682,14 @@ class CommentFeatures():
 		train_sum_predict = predict_train_1 + predict_train_2 + predict_train_3
 		dev_sum_predict = predict_dev_1 + predict_dev_2 + predict_dev_3
 
-		print "number of positives predicted when dividing by 2 = ", np.sum(dev_sum_predict / 2)
-		print "number of positives predicted when dividing by 3 = ", np.sum(dev_sum_predict / 3)
+		print "number of positives predicted when dividing by 2 = ", np.sum(dev_sum_predict / 2.0)
+		print "number of positives predicted when dividing by 3 = ", np.sum(dev_sum_predict / 3.0)
 
 		predict_train = train_sum_predict / 2
 		predict_dev = dev_sum_predict / 2
 
+		print "Classifying based on features:"
+		print self.vectorizer.get_feature_names()
 
 		print "Classified %d samples, using %d features" % self.t_x.shape
 		print "Training accuracy:"
@@ -734,48 +739,9 @@ class CommentFeatures():
 		#Save results to CSV
 		self.save_results(t_acc, d_acc)
 
-	def useEnsemble(self):
-		print "Starting Ensemble"
-		print "Classifying with LinearSVM"
-		self.classifier = svm.LinearSVC(C=.5, dual=False)#, class_weight="auto")
-		self.classifier.fit(self.t_x, self.t_y)
-		predict_train_1 = self.classifier.predict(self.t_x)
-		predict_dev_1 = self.classifier.predict(self.d_x)
-
-		print "Classifying with SVM + PolyKernel"
-		self.classifier = svm.SVC(C=.5)
-		#self.classifier = RandomForestClassifier()
-		self.classifier.fit(self.t_x, self.t_y)
-		predict_train_2 = self.classifier.predict(self.t_x)
-		predict_dev_2 = self.classifier.predict(self.d_x)
-
-		print "Classifying with SGD"
-		self.classifier = linear_model.SGDClassifier()
-		#self.classifier = RandomForestClassifier()
-		self.classifier.fit(self.t_x, self.t_y)
-		predict_train_3 = self.classifier.predict(self.t_x)
-		predict_dev_3 = self.classifier.predict(self.d_x)
-
-		print "Creating Ensemble"
-		#Dividing by 2 has the effect of selecting the majority
-		predict_train = (predict_train_1 + predict_train_2 + predict_train_3) / 2
-		predict_dev = (predict_dev_1 + predict_dev_2 + predict_dev_3) / 2
-		print "Classified %d samples, using %d features" % self.t_x.shape
-		print "Training accuracy:"
-		t_acc = self.f1_accuracy(predict_train, self.t_y)
-		self.p_r_f_s(self.t_y, predict_train)
-		
-		print "Classification report:"
-		self.classification_report(predict_train, self.t_y)
-		print "Dev accuracy:"
-		d_acc = self.f1_accuracy(predict_dev, self.d_y)
-		self.p_r_f_s(self.d_y, predict_dev)
-		
-		print "Classification report:"
-		self.classification_report(predict_dev, self.d_y)
-		#Save results to CSV
-		self.save_results(t_acc, d_acc, ensemble=True)
-
+	#Method: classifyOnSplit
+	#Classify using split defined in earlier method to train and run distinct
+	#classifiers for short and for long comments.
 	def classifyOnSplit(self):
 		print "Starting dual classifiers..."
 		self.classifier1.fit(self.s_t_x, self.s_t_y)
@@ -887,7 +853,7 @@ class CommentFeatures():
 	def visualize_2_features(self, feature1, feature2):
 		pass
 
-	def save_results(self, train, dev):
+	def save_results(self, train, dev, ensemble=False):
 		if self.save_file == "afs":
 			self.save_file = "/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/results.csv"
 		with open(self.save_file, 'a') as results_file:

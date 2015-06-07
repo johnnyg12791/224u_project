@@ -1664,3 +1664,406 @@ Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsil
        penalty='l2', power_t=0.5, random_state=None, shuffle=True,
        verbose=0, warm_start=False)
 
+**Results from Ensemble Model**
+2015-06-06 22:45
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.88841  | 0.75487 |
+---------------------
+Features = stem_jaccard
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 22:58
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.88829  | 0.75501 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:04
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.88856  | 0.75213 |
+---------------------
+Features = Jaccard,num_10_14_letter_words,num_15plus_letter_words,num_1_letter_words,num_2_5_letter_words,num_6_9_letter_words
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:07
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.0002  | 0.00025 |
+---------------------
+Features = Jaccard,num_10_14_letter_words,num_15plus_letter_words,num_1_letter_words,num_2_5_letter_words,num_6_9_letter_words
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:09
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 7e-05  | 0.0 |
+---------------------
+Features = Jaccard,num_10_14_letter_words,num_15plus_letter_words,num_1_letter_words,num_2_5_letter_words,num_6_9_letter_words
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:22
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.88936  | 0.75297 |
+---------------------
+Features = Jaccard,num_10_14_letter_words,num_15plus_letter_words,num_1_letter_words,num_2_5_letter_words,num_6_9_letter_words
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:26
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.65408  | 0.55408 |
+---------------------
+Features = Jaccard,num_10_14_letter_words,num_15plus_letter_words,num_1_letter_words,num_2_5_letter_words,num_6_9_letter_words
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:29
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.88841  | 0.75487 |
+---------------------
+Features = stem_jaccard
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:32
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.88829  | 0.75501 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:36
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.67055  | 0.6091 |
+---------------------
+Features = Jaccard,avg_sentence_len,avg_word_len,n_chars
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:39
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.88821  | 0.75422 |
+---------------------
+Features = Jaccard,polarity,polarity_dif,subjectivity,subjectivity_dif
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:41
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.88868  | 0.75382 |
+---------------------
+Features = Jaccard,polarity_dif,subjectivity_dif
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:45
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.58325  | 0.57827 |
+---------------------
+Features = Jaccard,polarity_dif,subjectivity_dif
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:46
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.59108  | 0.58932 |
+---------------------
+Features = Jaccard,polarity,polarity_dif,subjectivity,subjectivity_dif
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:49
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.56235  | 0.56308 |
+---------------------
+Features = Jaccard,avg_sentence_len,avg_word_len,n_chars
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:50
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.54953  | 0.5409 |
+---------------------
+Features = Jaccard,author_in_text
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:55
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.57706  | 0.57217 |
+---------------------
+Features = Jaccard,KLDistance,KLDistance_Nouns
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:56
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.57629  | 0.5713 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 23:59
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.57924  | 0.57436 |
+---------------------
+Features = stem_jaccard
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-07 00:02
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.13091  | 0.12082 |
+---------------------
+Features = Agree,CC,CD,Conservative,Cosine,DT,Democrat,Disagree,EX,Europe,FW,God,JJ,JJR,JJS,Jaccard,KLDistance,KLDistance_Nouns,LS,Liberal,MD,NN,NNP,NNPS,NNS,Obama,PDT,POS,PRP,PRP$,Palestine,PhD,RB,RBR,RBS,RP,Republican,UH,VB,VBD,VBG,VBN,VBP,VBZ,WDT,WP,WP$,WRB,author_in_text,avg_sentence_len,avg_word_len,first_sentence_cosine,first_sentence_jaccard,n_10_char_words,n_11_char_words,n_12_char_words,n_13_char_words,n_14_char_words,n_15_char_words,n_16_char_words,n_17_char_words,n_18_char_words,n_19_char_words,n_1_char_words,n_20_char_words,n_2_char_words,n_3_char_words,n_4_char_words,n_5_char_words,n_6_char_words,n_7_char_words,n_8_char_words,n_9_char_words,n_chars,n_exclamations,n_novel_tags,n_periods,n_questions,n_sentences,n_upper,n_words,num_10_14_letter_words,num_15plus_letter_words,num_1_letter_words,num_2_5_letter_words,num_6_9_letter_words,perc_10_14_letter_words,perc_10_char_words,perc_11_char_words,perc_12_char_words,perc_13_char_words,perc_14_char_words,perc_15_char_words,perc_15plus_letter_words,perc_16_char_words,perc_17_char_words,perc_18_char_words,perc_19_char_words,perc_1_char_words,perc_1_letter_words,perc_20_char_words,perc_2_5_letter_words,perc_2_char_words,perc_3_char_words,perc_4_char_words,perc_5_char_words,perc_6_9_letter_words,perc_6_char_words,perc_7_char_words,perc_8_char_words,perc_9_char_words,polarity,polarity_dif,president,skipgrams_2,skipgrams_3,starts_with_I,stem_jaccard,subjectivity,subjectivity_dif,words_per_sentence
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-07 00:06
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.0  | 0.0 |
+---------------------
+Features = Jaccard,n_exclamations,n_periods,n_questions,n_upper,n_words,starts_with_I
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-07 00:07
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.0  | 0.0 |
+---------------------
+Features = Jaccard,n_exclamations,n_periods,n_questions,n_upper,n_words,starts_with_I
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-07 00:10
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.0  | 0.0 |
+---------------------
+Features = Jaccard,n_exclamations,n_periods,n_questions,n_upper,n_words,starts_with_I
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-07 00:35
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.0  | 0.0 |
+---------------------
+Features = Agree,CC,CD,DT,Disagree,EX,FW,God,JJ,JJR,JJS,LS,MD,NN,NNP,NNPS,NNS,Obama,PDT,POS,PRP,PRP$,PhD,RB,RBR,RBS,RP,SYM,UH,VB,VBD,VBG,VBN,VBP,VBZ,WDT,WP,WP$,WRB,avg_sentence_len,avg_word_len,jaccard,n_10_char_words,n_11_char_words,n_12_char_words,n_13_char_words,n_14_char_words,n_15_char_words,n_16_char_words,n_17_char_words,n_18_char_words,n_19_char_words,n_1_char_words,n_20_char_words,n_2_char_words,n_3_char_words,n_4_char_words,n_5_char_words,n_6_char_words,n_7_char_words,n_8_char_words,n_9_char_words,n_chars,n_exclamations,n_periods,n_questions,n_sentences,n_upper,n_words,perc_10_char_words,perc_11_char_words,perc_12_char_words,perc_13_char_words,perc_14_char_words,perc_15_char_words,perc_16_char_words,perc_17_char_words,perc_18_char_words,perc_19_char_words,perc_1_char_words,perc_20_char_words,perc_2_char_words,perc_3_char_words,perc_4_char_words,perc_5_char_words,perc_6_char_words,perc_7_char_words,perc_8_char_words,perc_9_char_words,polarity,president,starts_with_I,subjectivity,words_per_sentence
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-07 00:38
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.16467  | 0.15197 |
+---------------------
+Features = Agree,CC,CD,DT,Disagree,EX,FW,God,JJ,JJR,JJS,LS,MD,NN,NNP,NNPS,NNS,Obama,PDT,POS,PRP,PRP$,PhD,RB,RBR,RBS,RP,SYM,UH,VB,VBD,VBG,VBN,VBP,VBZ,WDT,WP,WP$,WRB,avg_sentence_len,avg_word_len,jaccard,n_10_char_words,n_11_char_words,n_12_char_words,n_13_char_words,n_14_char_words,n_15_char_words,n_16_char_words,n_17_char_words,n_18_char_words,n_19_char_words,n_1_char_words,n_20_char_words,n_2_char_words,n_3_char_words,n_4_char_words,n_5_char_words,n_6_char_words,n_7_char_words,n_8_char_words,n_9_char_words,n_chars,n_exclamations,n_periods,n_questions,n_sentences,n_upper,n_words,perc_10_char_words,perc_11_char_words,perc_12_char_words,perc_13_char_words,perc_14_char_words,perc_15_char_words,perc_16_char_words,perc_17_char_words,perc_18_char_words,perc_19_char_words,perc_1_char_words,perc_20_char_words,perc_2_char_words,perc_3_char_words,perc_4_char_words,perc_5_char_words,perc_6_char_words,perc_7_char_words,perc_8_char_words,perc_9_char_words,polarity,president,starts_with_I,subjectivity,words_per_sentence
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-07 00:41
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.58054  | 0.58332 |
+---------------------
+Features = KLDistance,KLDistance_Nouns
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-07 00:53
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.58054  | 0.58332 |
+---------------------
+Features = KLDistance,KLDistance_Nouns
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-07 00:53
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.58054  | 0.58332 |
+---------------------
+Features = KLDistance,KLDistance_Nouns
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-07 00:54
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.57646  | 0.57203 |
+---------------------
+Features = Jaccard,author_in_text,first_sentence_cosine,first_sentence_jaccard,polarity,polarity_dif,subjectivity,subjectivity_dif
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-07 00:59
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.58168  | 0.57826 |
+---------------------
+Features = Jaccard,perc_10_14_letter_words,perc_15plus_letter_words,perc_1_letter_words,perc_2_5_letter_words,perc_6_9_letter_words
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-07 01:03
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.10487  | 0.09904 |
+---------------------
+Features = KLDistance,author_in_text,avg_sentence_len,n_words,perc_6_9_letter_words,stem_jaccard,subjectivity
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
