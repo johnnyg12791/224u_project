@@ -1,0 +1,21 @@
+all_query = "SELECT f.*, c.EditorSelection, c.CommentText FROM Comments c, Features f WHERE c.CommentID = f.CommentID"
+medium_query = "SELECT c.CommentID, c.EditorSelection, c.CommentText, JJ, n_periods, WP, n_sentences, perc_1_char_words, NN, starts_with_I, CC, n_chars, n_upper, n_words, VBZ FROM Features f, Comments c WHERE c.CommentID = f.CommentID"
+KLD_query = "SELECT KLDistance, KLDistance_Nouns FROM Features f, Comments c WHERE KLDistance IS NOT NULL AND c.CommentID = f.CommentID "
+subj_query = "SELECT subjectivity, polarity, c.CommentID, c.EditorSelection, c.CommentText FROM Comments c, Features f WHERE c.CommentID = f.CommentID "
+jaccard_query = "SELECT Jaccard, EditorSelection FROM Features c WHERE CommentID > 1 "
+nltk_query = "SELECT f.*, c.TrainTest, c.CommentText FROM Features f, Comments c WHERE c.CommentID = f.CommentID "
+basic_af = "SELECT * FROM Comments c WHERE CommentID > 1"
+n_chars = "SELECT Jaccard, n_sentences, avg_word_len, n_questions, EditorSelection FROM Features c "
+n_chars = "SELECT Agree, PhD, Jaccard, n_chars, c.EditorSelection, c.CommentID, c.CommentText FROM Features f, Comments c WHERE c.CommentID = f.CommentID "
+basic_af = "SELECT * FROM Features "
+overlap_features = "SELECT CommentText, skipgrams_2, skipgrams_3, Jaccard, Cosine, n_chars, n_words, n_upper, subjectivity, f.EditorSelection FROM Features f, Comments c WHERE c.CommentID = f.CommentID"
+everything_for_bow = "SELECT f.*, c.CommentText FROM Comments c, Features f, Articles a WHERE c.CommentID = f.CommentID AND c.ArticleURL = a.URL AND a.Section = 'World' "
+nn_features = "SELECT num_1_letter_words, skipgrams_3, n_sentences, EditorSelection FROM Features"
+
+#'SELECT f.n_sentences, nltk.POS, FROM Features f, nltk_features nltk JOIN '
+#Initialize features model:
+poly_features = "SELECT KLDistance, KLDistance_Nouns, Jaccard, stem_jaccard, polarity, n_exclamations, Cosine, n_questions, n_words, perc_1_char_words, perc_2_5_letter_words, perc_6_9_letter_words, perc_10_14_letter_words, perc_15plus_letter_words, JJR, RP, UH, VBD, POS, EX, RBS, PDT, NNPS, FW, LS, skipgrams_3, skipgrams_2, CommentID, EditorSelection FROM Features "
+poly_features_bow = "SELECT KLDistance, KLDistance_Nouns, Jaccard, polarity, n_exclamations, Cosine, n_questions, n_words, perc_1_char_words, perc_2_5_letter_words, perc_6_9_letter_words, perc_10_14_letter_words, perc_15plus_letter_words, JJR, RP, UH, VBD, POS, EX, RBS, PDT, NNPS, FW, LS, skipgrams_3, skipgrams_2, c.CommentID, c.EditorSelection, CommentText FROM Features f, Comments c, Articles a WHERE f.CommentID = c.CommentID AND a.Section = 'World' AND a.URL = c.ArticleURL "
+nltk_feats = "SELECT WRB, JJR, RP, UH, VBD, POS, EX, RBS, PDT, NNPS, FW, LS, EditorSelection FROM Features "
+one_feat = "SELECT Jaccard, c.CommentID, c.EditorSelection, c.CommentText FROM Features f, Comments c WHERE c.CommentID = f.CommentID "
+stem_jac_feat = "SELECT stem_jaccard, c.CommentID, c.EditorSelection, c.CommentText FROM Comments c, Features f WHERE c.CommentID = f.CommentID "

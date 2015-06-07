@@ -122,8 +122,10 @@ class CommentFeatures():
 	#editor pick and non-editor pick train and dev data.
 	#The postCondition paremeter refers to whether the passed query already has a "WHERE"
 	#condition included (such as SELECT * WHERE c.ID = f.ID). In this case, must append "ANDS"
-	def createSelectStatements(self, statement, postCondition=False):
-		if postCondition:
+	def createSelectStatements(self, statement):
+		#Check if statement was created using a postcondition (in which case, don't use AND)
+		postCondition = string.find(statement, "WHERE")
+		if postCondition > -1:
 			self.trainSelectQueryEditorPick =  statement + " AND f.TrainTest =1 AND f.EditorSelection = 1"
 			self.trainSelectQueryNonEditorPick = statement + " AND f.TrainTest =1 AND f.EditorSelection = 0"
 			self.devSelectQueryEditorPick = statement + " AND f.TrainTest =2 AND f.EditorSelection = 1"
@@ -146,7 +148,7 @@ class CommentFeatures():
 	#The t_x and d_x parameters are in case you are going to run another features set
 	#after bag of words; in which case, you will want to vectorize these vectors separately.
 	def getCommentsBagOfWords(self, t_x, d_x, returnCommentIDs=False):
-		self.createSelectStatements(self.selectStatement, postCondition=True)
+		self.createSelectStatements(self.selectStatement)
 		#Create list of comment IDs for feature extraction: 
 		t_commentIDs = [] 
 		d_commentIDs = []
@@ -234,8 +236,6 @@ class CommentFeatures():
 				val = row[i]
 				if val == None and self.zeroBlanks:
 					val = 0
-				#if val == None: ##TODO: Remove once no longer adding null features
-				#	val = 0
 					#blanks_flag = 1 #Hackey way to screen out "incompletely featured" comments
 				#Append EditorSelection to golds:
 				if col[0] == "EditorSelection":
@@ -267,8 +267,9 @@ class CommentFeatures():
 	#This method will set self.t_x and self.d_x to be vectors of comment features, and
 	#t_y and d_y to be the gold labels. Note that this relies on passing the model a
 	#feature selection query, and must have first thing you request be comment ID.
-	def getCommentFeatures(self, postCondition=False):
-		self.createSelectStatements(self.featureSelectionQuery, postCondition)
+	#The split parameter is for splitting our input based on some feature.
+	def getCommentFeatures(self):
+		self.createSelectStatements(self.featureSelectionQuery)
 
 		#Train and dev bag of words representations
 		t_bow_X = []
@@ -321,6 +322,136 @@ class CommentFeatures():
 
 		#Return train and dev bag of words representations
 		return t_bow_X, d_bow_X
+
+	def featureDictSplitClassifier(self, query, cutoff, vectorizeBOW=False, splitOn=20):
+		short_X = []
+		short_bow = []
+		long_X = []
+		long_bow = []
+		short_Y = []
+		long_Y = []
+		short_IDS = []
+		long_IDS = []
+
+		num_comments = 0
+		for row in self.c.execute(query):
+			feature_dict = {}
+			for i, col in enumerate(self.c.description):
+				val = row[i]
+				if val == None and self.zeroBlanks:
+					val = 0
+				feature_dict[col[0]] = val
+
+			commentText = feature_dict.pop("CommentText")
+			length_comment = len(commentText.split())
+			if length_comment > splitOn:
+				long_Y.append(feature_dict.pop("EditorSelection"))
+				long_IDS.append(feature_dict.pop("CommentID"))
+				long_bow.append(commentText)
+				long_X.append(feature_dict)
+			else:
+				short_Y.append(feature_dict.pop("EditorSelection"))
+				short_IDS.append(feature_dict.pop("CommentID"))
+				short_bow.append(commentText)
+				short_X.append(feature_dict)
+
+			#Check cutoff:
+			num_comments += 1
+			if num_comments > cutoff: break 
+		return (short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS)
+
+	#Method: getCommentsSplitClassifier
+	#This method will set self.t_x and self.d_x to be vectors of comment features, and
+	#t_y and d_y to be the gold labels. Note that this relies on passing the model a
+	#feature selection query, and must have first thing you request be comment ID.
+	#The split parameter is for splitting our input based on some feature.
+	def getCommentsSplitClassifier(self, splitOn):
+
+		self.s_t_x = []
+		self.l_t_x = []
+		self.s_d_x = []
+		self.l_d_x = []
+		self.s_t_y = []
+		self.l_t_y = []
+		self.s_d_y = []
+		self.l_d_y = []
+		self.s_t_ID = []
+		self.l_t_ID = []
+		self.s_d_ID = []
+		self.l_d_ID = []
+
+		self.createSelectStatements(self.featureSelectionQuery)
+
+		#Train and dev bag of words representations
+		s_t_bow_X = []
+		l_t_bow_X = []
+		s_d_bow_X = []
+		l_d_bow_X = []
+
+		#Train, editor
+		short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS = self.featureDictSplitClassifier(
+			self.trainSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicksTrain, splitOn)
+
+		self.s_t_x.extend(short_X)
+		self.l_t_x.extend(long_X)
+		self.s_t_y.extend(short_Y)
+		self.l_t_y.extend(long_Y)
+		s_t_bow_X.extend(short_bow)
+		l_t_bow_X.extend(long_bow)
+		self.s_t_ID.extend(short_bow)
+		self.l_t_ID.extend(long_bow)
+
+		if self.verbose:
+			print "Created training/editor pick vectors"
+
+		#Train, non-editor
+		short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS = self.featureDictSplitClassifier(
+			self.trainSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicksTrain), splitOn)
+		self.s_t_x.extend(short_X)
+		self.l_t_x.extend(long_X)
+		self.s_t_y.extend(short_Y)
+		self.l_t_y.extend(long_Y)
+		s_t_bow_X.extend(short_bow)
+		l_t_bow_X.extend(long_bow)
+		self.s_t_ID.extend(short_bow)
+		self.l_t_ID.extend(long_bow)
+
+		if self.verbose:
+			print "Created training/non-editor pick vectors"
+
+		#Dev, editor
+		short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS = self.featureDictSplitClassifier(
+			self.devSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicksDev, splitOn)
+		self.s_d_x.extend(short_X)
+		self.l_d_x.extend(long_X)
+		self.s_d_y.extend(short_Y)
+		self.l_d_y.extend(long_Y)
+		s_d_bow_X.extend(short_bow)
+		l_d_bow_X.extend(long_bow)
+		self.s_d_ID.extend(short_bow)
+		self.l_d_ID.extend(long_bow)
+
+
+		if self.verbose:
+			print "Created dev/editor pick vectors"
+
+		#Dev, non-editor
+		short_X, short_bow, short_Y, short_IDS, long_X, long_bow, long_Y, long_IDS = self.featureDictSplitClassifier(
+			self.devSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicksDev), splitOn)
+		self.s_d_x.extend(short_X)
+		self.l_d_x.extend(long_X)
+		self.s_d_y.extend(short_Y)
+		self.l_d_y.extend(long_Y)
+		s_d_bow_X.extend(short_bow)
+		l_d_bow_X.extend(long_bow)
+		self.s_d_ID.extend(short_bow)
+		self.l_d_ID.extend(long_bow)
+
+		if self.verbose:
+			print "Created dev/non-editor pick vectors"
+
+		#Return train and dev bag of words representations
+		return s_t_bow_X, l_t_bow_X, s_d_bow_X, l_d_bow_X
 
 ################ Cleaning up feature vectors: ###############
 
@@ -394,7 +525,7 @@ class CommentFeatures():
 	#A model based on extracted features, running bag of words on the comments.
 	def featuresAndCommentWordsModel(self, tfidf=True, maxNgram=1):
 
-		bow_t_x, bow_d_x = self.getCommentFeatures(postCondition=True)
+		bow_t_x, bow_d_x = self.getCommentFeatures()
 
 		ngram_size = (1, maxNgram)
 
@@ -417,58 +548,47 @@ class CommentFeatures():
 		self.t_x = sps.hstack([self.t_x, bow_t_x])
 		self.d_x = sps.hstack([self.d_x, bow_d_x])
 
-	#Method: featuresAndCommentWordsModel
-	#A feature model based on extracted features + BOW on the comments.
-	def featuresAndCommentWordsModel_slow(self, tfidf=True):
-		#Get bag of words from comments:
-		bow_t_x = []
-		bow_d_x = []
-		t_IDs, d_IDs = self.getCommentsBagOfWords(t_x=bow_t_x, d_x=bow_d_x, returnCommentIDs=True)
+	#Method: splitClassifierModel
+	#Model which runs two classifiers
+	def splitClassifierModel(self, tfidf=True, maxNgram=1, splitOn=20):
+		s_t_bow_X, l_t_bow_X, s_d_bow_X, l_d_bow_X = self.getCommentsSplitClassifier(splitOn)
+		ngram_size = (1, maxNgram)
 
-		#Vectorize and transform BOW features:
-		self.BOWvectorizer = fe.text.TfidfVectorizer(stop_words='english')
-		self.BOWvectorizer.fit(bow_t_x + bow_d_x)
-		bow_t_x = self.BOWvectorizer.transform(bow_t_x)
-		bow_d_x = self.BOWvectorizer.transform(bow_d_x)
+		if tfidf:
+			self.BOWvectorizer = fe.text.TfidfVectorizer(stop_words='english', strip_accents='unicode', ngram_range=ngram_size)
+		else:
+			self.BOWvectorizer = fe.text.DictVectorizer()
+		self.BOWvectorizer.fit(s_t_bow_X + l_t_bow_X + s_d_bow_X + l_d_bow_X)
+		s_t_bow_X = self.BOWvectorizer.transform(s_t_bow_X)
+		l_t_bow_X = self.BOWvectorizer.transform(l_t_bow_X)
+		s_d_bow_X = self.BOWvectorizer.transform(s_d_bow_X)
+		l_d_bow_X = self.BOWvectorizer.transform(l_d_bow_X)
 
-		if self.verbose:
-			print "Extracted and vectorized BOW features..."
-
-		#Get extra features, using list found in BOW task:
-		feat_t_x = []
-		feat_d_x = []
-		for c_id in t_IDs:
-			feat_t_x.append(self.getFeatureRow(self.featureSelectionQuery, c_id))
-		for c_id in d_IDs:
-			feat_d_x.append(self.getFeatureRow(self.featureSelectionQuery, c_id))
-
-
-		#Vectorize the extra features; store in self.t_x and self.d_x
 		self.vectorizer = fe.DictVectorizer()
-		self.vectorizer.fit(feat_t_x + feat_d_x)
-		self.t_x = self.vectorizer.transform(feat_t_x)
-		self.d_x = self.vectorizer.transform(feat_d_x)
+		self.vectorizer.fit(self.s_t_x + self.l_t_x + self.s_d_x + self.l_d_x)
+		self.s_t_x = self.vectorizer.transform(self.s_t_x)
+		self.l_t_x = self.vectorizer.transform(self.l_t_x)
+		self.s_d_x = self.vectorizer.transform(self.s_d_x)
+		self.l_d_x = self.vectorizer.transform(self.l_d_x)
 
-		if self.verbose:
-			print "Extracted and vectorized extra features..."
-
-		#Stack them together:
-		self.t_x = sps.hstack([self_t_x, bow_t_x])
-		self.d_x = sps.hstack([self.d_x, bow_d_x])
+		self.s_t_x = sps.hstack([self.s_t_x, s_t_bow_X])
+		self.l_t_x = sps.hstack([self.l_t_x, l_t_bow_X])
+		self.s_d_x = sps.hstack([self.s_d_x, s_d_bow_X])
+		self.l_d_x = sps.hstack([self.l_d_x, l_d_bow_X])
 
 
 ###########Set classifier type + parameters: ############################
 
 	#Method: setLinearSVM
 	#Sets classifier to be very basic linear SVM
-	def setLinearSVM(self, C_val=.1):
-		self.classifier = svm.LinearSVC(C=C_val)
+	def setLinearSVM(self, C_val=.1, penalty='l2', dual=True):
+		self.classifier = svm.LinearSVC(C=C_val, penalty=penalty, dual=dual)
 		print "Using linear SVM with C=%.3f" % C_val
 
 	#Method: setSGD
 	#Set classifier to be SGD, with default settings
 	def setSGD(self):
-		self.classifier = linear_model.SGDClassifier()
+		self.classifier = linear_model.SGDClassifier(loss="log")
 		print "Using SGD classifier"
 
 	#Method: setKernalSVM
@@ -516,6 +636,13 @@ class CommentFeatures():
 		#Make classifier a pipeline
 		self.classifier = Pipeline(steps=[('rbm', rbm), ('logistic', logistic)])
 
+	#Method: useTwoClassifiers
+	#Use 2 classifiers splitting on review length. Note that in order to use this classification
+	#scheme you must have called "splitClassifierModel"
+	def useTwoClassifiers(self):
+		self.classifier1 = svm.LinearSVC(C=.5)
+		self.classifier2 = svm.LinearSVC(C=.5)
+
 
 ###########Classification step: ##########################################
 
@@ -550,6 +677,70 @@ class CommentFeatures():
 		#Save results to CSV
 		self.save_results(t_acc, d_acc)
 
+	def useEnsemble(self):
+		print "Starting Ensemble"
+		print "Classifying with LinearSVM"
+		self.classifier = svm.LinearSVC(C=.5, dual=False)#, class_weight="auto")
+		self.classifier.fit(self.t_x, self.t_y)
+		predict_train_1 = self.classifier.predict(self.t_x)
+		predict_dev_1 = self.classifier.predict(self.d_x)
+
+		print "Classifying with SVM + PolyKernel"
+		self.classifier = svm.SVC(C=.5)
+		#self.classifier = RandomForestClassifier()
+		self.classifier.fit(self.t_x, self.t_y)
+		predict_train_2 = self.classifier.predict(self.t_x)
+		predict_dev_2 = self.classifier.predict(self.d_x)
+
+		print "Classifying with SGD"
+		self.classifier = linear_model.SGDClassifier()
+		#self.classifier = RandomForestClassifier()
+		self.classifier.fit(self.t_x, self.t_y)
+		predict_train_3 = self.classifier.predict(self.t_x)
+		predict_dev_3 = self.classifier.predict(self.d_x)
+
+		print "Creating Ensemble"
+		#Dividing by 2 has the effect of selecting the majority
+		predict_train = (predict_train_1 + predict_train_2 + predict_train_3) / 2
+		predict_dev = (predict_dev_1 + predict_dev_2 + predict_dev_3) / 2
+		print "Classified %d samples, using %d features" % self.t_x.shape
+		print "Training accuracy:"
+		t_acc = self.f1_accuracy(predict_train, self.t_y)
+		self.p_r_f_s(self.t_y, predict_train)
+		
+		print "Classification report:"
+		self.classification_report(predict_train, self.t_y)
+		print "Dev accuracy:"
+		d_acc = self.f1_accuracy(predict_dev, self.d_y)
+		self.p_r_f_s(self.d_y, predict_dev)
+		
+		print "Classification report:"
+		self.classification_report(predict_dev, self.d_y)
+		#Save results to CSV
+		self.save_results(t_acc, d_acc, ensemble=True)
+
+	def classifyOnSplit(self):
+		print "Starting dual classifiers..."
+		self.classifier1.fit(self.s_t_x, self.s_t_y)
+		self.classifier2.fit(self.l_t_x, self.l_t_y)
+
+		short_predict_train = self.classifier1.predict(self.s_t_x)
+		long_predict_train = self.classifier2.predict(self.l_t_x)
+		short_predict_dev = self.classifier1.predict(self.s_d_x)
+		long_predict_dev = self.classifier2.predict(self.l_d_x)
+
+		print "Short train:"
+		self.classification_report(self.s_t_y, short_predict_train)
+		print "Short dev:"
+		self.classification_report(self.s_d_y, short_predict_dev)
+		print "Long train:"
+		self.classification_report(self.l_t_y, long_predict_train)
+		print "Long dev:"
+		self.classification_report(self.l_d_y, long_predict_dev)
+
+	#Method: makeNamesList
+	#Returns the names associated with features at given index in the
+	#classifier's attributes matrix.
 	def makeNamesList(self):
 		feature_names = []
 		feature_names.extend(self.vectorizer.get_feature_names())
@@ -569,6 +760,38 @@ class CommentFeatures():
 		tops = heapq.nlargest(numTop, enumerate(weights[0]), key=lambda x: abs(x[1])) #Use absolute magnitude of weight as key
 		for item in tops:
 		    print "Item " + names[item[0]].encode('utf-8') + " has weight " + str(item[1])
+
+    #Method: classifyKValidation
+    #Run a given classifier k times, returns an average of its outputs for 6 categories:
+    #train & dev precision, recall, and f1. Prints these quantities out, as well as variance.
+	def classifyKValidation(self, k=3, verbose=False):
+		accuracies = np.zeros((k, 6))
+		for i in range(k):
+			self.classifier.fit(self.t_x, self.t_y)
+			predict_train = self.classifier.predict(self.t_x)
+			predict_dev = self.classifier.predict(self.d_x)
+
+			if verbose:
+				print "Train:"
+				print me.classification_report(self.t_y, predict_train)
+				print "Dev:"
+				print me.classification_report(self.d_y, predict_dev)
+
+			p, r, f, s = me.precision_recall_fscore_support(self.t_y, predict_train, average='micro')
+			accuracies[i][0] = p
+			accuracies[i][1] = r
+			accuracies[i][2] = f
+			p, r, f, s = me.precision_recall_fscore_support(self.d_y, predict_dev, average='micro')
+			accuracies[i][3] = p
+			accuracies[i][4] = r
+			accuracies[i][5] = f
+
+		avg_accuracies = np.mean(accuracies, axis=0)
+		print "Average train precision=%.3f, recall=%.3f, F1=%.3f \n Average dev precision=%.3f, recall=%.3f, F1=%.3f" % (avg_accuracies[0], avg_accuracies[1], avg_accuracies[2], avg_accuracies[3], avg_accuracies[4], avg_accuracies[5])
+		std_variance = np.std(accuracies, axis=0)
+		print "Variance looked like:"
+		print std_variance
+		    
 
 ##########Accuracy and Results: ##########################################
 

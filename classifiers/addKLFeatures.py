@@ -7,6 +7,7 @@ import numpy as np
 import scipy.sparse as ss
 import string
 import re 
+import sys
 ##TODO: alphabetize imports
 
 #Return the probabilities of each word in the vector
@@ -100,6 +101,9 @@ article_metas = {}
 
 #get_fulltext_no_repeats_query = "SELECT c.CommentID, CommentText, FullText, KLDistance FROM ArticleText a, Comments c, Features f WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND f.KLDistance IS NULL "
 get_fulltext_norepeats_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL FROM ArticleText a, Comments c, Features f WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND f.KLDistance IS NULL"
+count_already = loop_cursor.execute("SELECT COUNT(*) FROM Features WHERE KLDistance IS NOT NULL").fetchone()[0]
+count_togo = loop_cursor.execute("SELECT COUNT(*) FROM Features WHERE KLDistance IS NULL").fetchone()[0]
+
 #get_fulltexts_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL FROM ArticleText a, Comments c WHERE c.ArticleURL=a.URL"
 for c_id, c_text, a_text, a_url in loop_cursor.execute(get_fulltext_norepeats_query):
 #for c_id, c_text, a_text, a_url, klD in loop_cursor.execute(get_fulltext_no_repeats_query):
@@ -109,9 +113,10 @@ for c_id, c_text, a_text, a_url in loop_cursor.execute(get_fulltext_norepeats_qu
 		setter_cursor.execute("UPDATE Features SET KLDistance = ?, KLDistance_Nouns = ? WHERE CommentID = ?", (raw_kl, noun_kl, c_id))
 		count += 1
 		if count % 100 == 0:
-			print "+100"
+			sys.stdout.write(".")
+			sys.stdout.flush()
 		if count % 1000 == 0:
-			print "Added %d; still chugging" % count 
+			print "Added %d; %d lef" % (count+count_already, count_togo - count)
 			db.commit()
 
 #DB takedown:
@@ -119,7 +124,6 @@ db.commit()
 setter_cursor.close()
 loop_cursor.close()
 db.close()
-
 
 
 
