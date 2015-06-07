@@ -2067,3 +2067,82 @@ Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.
        loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
        random_state=None, shuffle=False, verbose=0, warm_start=False)
 
+**Results from Ensemble Model**
+2015-06-07 12:20
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.54442  | 0.54049 |
+---------------------
+Features = KLDistance,author_in_text,avg_sentence_len,n_words,perc_6_9_letter_words,stem_jaccard,subjectivity
+Classifier = SGDClassifier(alpha=0.0001, class_weight=None, epsilon=0.1, eta0=0.0,
+       fit_intercept=True, l1_ratio=0.15, learning_rate='optimal',
+       loss='log', n_iter=5, n_jobs=1, penalty='l2', power_t=0.5,
+       random_state=None, shuffle=False, verbose=0, warm_start=False)
+
+2015-06-07 12:23
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.12879  | 0.12382 |
+---------------------
+Features = KLDistance,author_in_text,avg_sentence_len,n_words,perc_6_9_letter_words,stem_jaccard,subjectivity
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='l2', multi_class='ovr', penalty='l2',
+     random_state=None, tol=0.0001, verbose=0)
+
+2015-06-07 12:28
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.56275  | 0.55893 |
+---------------------
+Features = KLDistance,author_in_text,avg_sentence_len,n_words,perc_6_9_letter_words,stem_jaccard,subjectivity
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='l2', multi_class='ovr', penalty='l2',
+     random_state=None, tol=0.0001, verbose=0)
+
+2015-06-07 12:29
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.10431  | 0.09792 |
+---------------------
+Features = KLDistance,author_in_text,avg_sentence_len,n_words,perc_6_9_letter_words,stem_jaccard,subjectivity
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='l2', multi_class='ovr', penalty='l2',
+     random_state=None, tol=0.0001, verbose=0)
+
+2015-06-07 12:31
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.06326  | 0.05919 |
+---------------------
+Features = KLDistance,author_in_text,avg_sentence_len,n_words,perc_6_9_letter_words,stem_jaccard,subjectivity
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='l2', multi_class='ovr', penalty='l2',
+     random_state=None, tol=0.0001, verbose=0)
+
+2015-06-07 12:32
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.67807  | 0.67953 |
+---------------------
+Features = KLDistance,author_in_text,avg_sentence_len,n_words,perc_6_9_letter_words,stem_jaccard,subjectivity
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='l2', multi_class='ovr', penalty='l2',
+     random_state=None, tol=0.0001, verbose=0)
+
+2015-06-07 12:34
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.63238  | 0.63152 |
+---------------------
+Features = KLDistance,author_in_text,avg_sentence_len,n_words,perc_6_9_letter_words,stem_jaccard,subjectivity
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='l2', multi_class='ovr', penalty='l2',
+     random_state=None, tol=0.0001, verbose=0)
+

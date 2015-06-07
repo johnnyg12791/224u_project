@@ -104,8 +104,8 @@ cf.featureModel()
 #cf.splitClassifierModel(splitOn=200)
 
 ##############Choose classifier: (Choose ONE)
-cf.setSGD()
-#cf.setLinearSVM(C_val=.5)
+#cf.setSGD()
+cf.setLinearSVM(C_val=.5)
 #cf.setKernelSVM("poly")
 #cf.useCVSearch()
 #cf.setRandomForest()
@@ -114,12 +114,13 @@ cf.setSGD()
 
 
 ##############Perform the classification step, show metrics:
-cf.useEnsemble()
-#cf.classify()
+#cf.useEnsemble()
+cf.classify()
 #cf.visualize_tsne()
 cf.topNCoefficients(10) #Check to see which coefficients are assigned highest classification weight
 
-#cf.viewMisclassifiedReviews(article_url="http://www.nytimes.com/2013/04/18/us/politics/senate-obama-gun-control.html")
+cf.viewMisclassifiedReviews(showFalseNegs=False)
+cf.viewYesClassifiedReviews()
 
 #cf.classifyOnSplit()
 #cf.classifyKValidation(k=3, verbose=True)

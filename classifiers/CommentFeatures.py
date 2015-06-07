@@ -875,7 +875,38 @@ class CommentFeatures():
 
 	#Method: viewMisclassifiedReviews
 	#A method that will print out reviews that were misclassified.
-	def viewMisclassifiedReviews(self, numToShow=10, allFromDev=True, showFalseNegs=True, showFalsePos=True, article_url=None):
+	def viewMisclassifiedReviews(self, numToShow=10, allFromDev=True, showFalseNegs=True, showFalsePos=True):
+		#View mislcassified reviews:
+		predictions_dev = self.classifier.predict(self.d_x)
+		false_pos = 0
+		false_neg = 0
+
+		for i in range(len(predictions_dev)):
+			prediction = predictions_dev[i]
+			gold = self.d_y[i]
+			c_id = self.d_IDs[i]
+			if showFalseNegs and false_neg < numToShow:
+				if prediction == 1 and gold == 0 :
+					print "Comment %d misclassified. False Positive" % (c_id)
+					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ?", (c_id,)).fetchone()
+					print text
+					print "\n"
+					false_pos += 1
+			if showFalsePos and false_pos < numToShow:
+				if prediction == 0 and gold == 1:
+					print "Comment %d misclassified . False Negative" % (c_id)
+					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ?", (c_id,)).fetchone()
+					print text
+					print "\n"
+					false_neg += 1
+			if false_neg + false_pos > 2 * numToShow: break
+		print "Number of False Positives: ", false_pos
+		print "Number of False Negatives: ", false_neg
+
+
+	#Method: viewMisclassifiedReviews
+	#A method that will print out reviews that were misclassified.
+	def viewMisclassifiedReviewsFromURL(self, numToShow=10, allFromDev=True, showFalseNegs=True, showFalsePos=True, article_url=None):
 		#View mislcassified reviews:
 		predictions_dev = self.classifier.predict(self.d_x)
 		false_pos = 0
@@ -896,21 +927,19 @@ class CommentFeatures():
 					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ?", (c_id,)).fetchone()
 					print text
 					print "\n"
-					false_neg += 1
+					false_pos += 1
 			if showFalsePos and false_pos < numToShow  and c_id in ids_by_article:
 				if prediction == 0 and gold == 1:
 					print "Comment %d misclassified . False Negative" % (c_id)
 					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ?", (c_id,)).fetchone()
 					print text
 					print "\n"
-					false_pos += 1
-			if false_neg + false_pos > 2 * numToShow: break
+					false_neg += 1
+			#if false_neg + false_pos > 2 * numToShow: break
 		print "Number of False Positives: ", false_pos
 		print "Number of False Negatives: ", false_neg
 
-
-
-	def viewYesClassifiedReviews(self, numToShow=10, allFromDev=True, showTrueNegs=True, showTruePos=True, article_url=None):
+	def viewYesClassifiedReviewsFromURL(self, numToShow=10, allFromDev=True, showTrueNegs=True, showTruePos=True, article_url=None):
 		#View mislcassified reviews:
 		predictions_dev = self.classifier.predict(self.d_x)
 		true_pos = 0
@@ -926,14 +955,14 @@ class CommentFeatures():
 			gold = self.d_y[i]
 			c_id = self.d_IDs[i]
 			if showTrueNegs and true_neg < numToShow and c_id in ids_by_article:
-				if prediction == 0 and prediction == 0:
+				if prediction == 0 and gold == 0:
 					print "Comment %d classified correctly: True Negative" % (c_id)
 					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ?", (c_id,)).fetchone()
 					print text
 					print "\n"
 					true_neg += 1
 			if showTruePos and true_pos < numToShow and c_id in ids_by_article:
-				if prediction == 1 and prediction == 1:
+				if prediction == 1 and gold == 1:
 					c_id = self.d_IDs[i]
 					print "Comment %d classified correctly: True Positive" % (c_id)
 					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ?", (c_id,)).fetchone()
@@ -945,7 +974,36 @@ class CommentFeatures():
 		print "Number of True Negatives: ", true_neg
 
 
+	#Method: viewYesClassifiedReviews
+	#Note that the URL version is buggy when you don't pass in a URL...
+	def viewYesClassifiedReviews(self, numToShow=10, allFromDev=True, showTrueNegs=True, showTruePos=True, article_url=None):
+		#View mislcassified reviews:
+		predictions_dev = self.classifier.predict(self.d_x)
+		true_pos = 0
+		true_neg = 0
 
+		for i in range(len(predictions_dev)):
+			prediction = predictions_dev[i]
+			gold = self.d_y[i]
+			c_id = self.d_IDs[i]
+			if showTrueNegs and true_neg < numToShow:
+				if prediction == 0 and gold == 0:
+					print "Comment %d classified correctly: True Negative" % (c_id)
+					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ?", (c_id,)).fetchone()
+					print text
+					print "\n"
+					true_neg += 1
+			if showTruePos and true_pos < numToShow:
+				if prediction == 1 and gold == 1:
+					c_id = self.d_IDs[i]
+					print "Comment %d classified correctly: True Positive" % (c_id)
+					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ?", (c_id,)).fetchone()
+					print text
+					print "\n"
+					true_pos += 1
+			if true_neg + true_pos > 2 * numToShow: break
+		print "Number of True Positives: ", true_pos
+		print "Number of True Negatives: ", true_neg
 
 
 
