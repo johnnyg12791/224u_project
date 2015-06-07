@@ -5,7 +5,7 @@ def nltk_feats(text):
     import nltk
     # Penn Discourse Treebank #I removed 'TO' and 'IN' -John
     POS_TREEBANK_TAGS = {'CC', 'CD', 'DT', 'EX', 'FW', 'JJ', 'JJR', 'JJS', 'LS', 'MD', 'NN', 'NNS', 'NNP', 'NNPS', 'PDT', 'POS', 'PRP', 'PRP$', 'RB', 'RBR', 'RBS', 'RP', 'SYM', 'UH', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'WDT', 'WP', 'WP$', 'WRB'}
-    MAX_CHARS_PER_WORD = 1 #20
+    MAX_CHARS_PER_WORD = 20
 
     feats = defaultdict(float)
     tokens = nltk.word_tokenize(text)
@@ -40,13 +40,12 @@ def nltk_feats(text):
 
     # Bag of parts of speech
         
-    '''tagged = nltk.pos_tag(tokens)
-    feats['n_novel_tags'] = 0.0
+    tagged = nltk.pos_tag(tokens)
     for word, tag in tagged:
         if tag in POS_TREEBANK_TAGS:
             feats[tag] += 1.0
-	    #print tag
-    #print feats'''
+        else:
+            feats['n_novel_tags'] += 1.0
     
     return feats
 
@@ -58,14 +57,24 @@ def textblob_feats(text):
     feats['subjectivity'] = blob.subjectivity
     return feats
 
-def all_comment_feats(text):
+def nltk_keys():
+    POS_TREEBANK_TAGS = set(['CC', 'CD', 'DT', 'EX', 'FW', 'JJ', 'JJR', 'JJS', 'LS', 'MD', 'NN', 'NNS', 'NNP', 'NNPS', 'PDT', 'POS', 'PRP', 'PRP$', 'RB', 'RBR', 'RBS', 'RP', 'SYM', 'UH', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'WDT', 'WP', 'WP$', 'WRB'])
+    return POS_TREEBANK_TAGS | set(nltk_feats('inputs do not matter').keys())
+
+def textblob_keys():
+    return set(['polarity', 'subjectivity'])
+
+def all_comment_keys():
+    return nltk_keys() | textblob_keys() | set(['jaccard'])
+
+def all_comment_feats(text, article):
     f = nltk_feats(text)
-    '''f2 = textblob_feats(text)
+    f2 = textblob_feats(text)
     if len(set(f.keys()).intersection(f2.keys())) != 0:
-        print 'Intersection:'
+        print 'WARNING: Intersection found:'
         print set(f.keys()).intersection(f2.keys())
-        raise Exception('Oh no, overlap detected!')
-    f.update(f2)'''
+    f.update(f2)
+    f.update({'jaccard': jaccard_distance(text, article)})
     return f
 
 def jaccard_distance(textA, textB):

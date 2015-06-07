@@ -1,11 +1,14 @@
 import sqlite3
 import os
 import sys
+import re
 import time
 import string
 from collections import Counter
 from nltk.tag import pos_tag
 from nltk.stem.porter import *
+from textblob import TextBlob
+import math
 
 ############### Copied from addSingleFeature.py #############################
 
@@ -18,61 +21,21 @@ def make_sure_feature_in_db(cursor, feature_name):
         cursor.execute("ALTER TABLE Features ADD COLUMN %s REAL" % feature_name)
 
 
-############## Select feature adding model: ###############################
-
-#Method: updated_add_similarity_metric
-#Updated method of add_similarity_metric that iterates through DB with a single cursor loop.
-#Includes support for using a cutoff number of reviews (defined immediately above main)
-def add_multiple_similarity_metrics(database):
-    #loop cursor
-    cursor = database.cursor()
-    #insertion cursor
-    set_cursor = database.cursor()
-    make_sure_feature_in_db(cursor, "skipgrams_2")
-    make_sure_feature_in_db(cursor, "skipgrams_3")
-
-    #auxillary info
-    counter = 0
-    metadata = {}
-
-    #Loop through all reviews
-    #get_fulltexts_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL FROM ArticleText a, Comments c WHERE c.ArticleURL=a.URL"
-    #for c_id, c_text, a_text, a_url in cursor.execute(get_fulltexts_query):
-    fulltext_no_repeats_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL FROM ArticleText a, Comments c, Features f WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND f.skipgrams_3 IS NULL"
-    fulltext_no_repeats_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL FROM ArticleText a, Comments c, Features f WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND f.skipgrams_3 IS NULL"
-    for c_id, c_text, a_text, a_url in cursor.execute(fulltext_no_repeats_query):
-
-        c_vec = word_vec(c_text)
-        a_vec = word_vec(a_text)
-        
-        #Add 2-skipgrams
-        skip2_similarity = jaccard_similarity_skipgrams(c_vec, a_vec, a_url, 2, skipgram2_metadata)
-        #Add 3-skipgrams
-        skip3_similarity = jaccard_similarity_skipgrams(c_vec, a_vec, a_url, 3, skipgram3_metadata)
-
-        insert_statement = ("UPDATE Features SET skipgrams_2 = %f, skipgrams_3 = %f WHERE CommentID = %d" % (skip2_similarity, skip3_similarity, c_id))
-        set_cursor.execute(insert_statement)
-
-        counter += 1
-        if counter % 1000 == 0:
-            database.commit()
-            print "Have added %d scores" % counter
-        #if counter > cutoffNum: break
-
-    set_cursor.close()
-    cursor.close()
-    database.commit()
-
-
 #Method: add_similarity_metric
 #Updated method of add_similarity_metric that iterates through DB with a single cursor loop.
 #Includes support for using a cutoff number of reviews (defined immediately above main)
-def add_similarity_metric(database, feat_name, feat_fxn):
+def add_similarity_metric(database):
     #loop cursor
     cursor = database.cursor()
     #insertion cursor
     set_cursor = database.cursor()
-    make_sure_feature_in_db(cursor, feat_name)
+    make_sure_feature_in_db(cursor, "author_in_text")
+    make_sure_feature_in_db(cursor, "first_sentence_jaccard")
+    make_sure_feature_in_db(cursor, "first_sentence_cosine")
+    make_sure_feature_in_db(cursor, "polarity_dif")
+    make_sure_feature_in_db(cursor, "subjectivity_dif")
+
+
 
     #auxillary info
     counter = 0
@@ -81,26 +44,28 @@ def add_similarity_metric(database, feat_name, feat_fxn):
     #Loop through all reviews
     #get_fulltexts_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL FROM ArticleText a, Comments c WHERE c.ArticleURL=a.URL"
     #for c_id, c_text, a_text, a_url in cursor.execute(get_fulltexts_query):
-    count = cursor.execute("SELECT COUNT(*) FROM Features WHERE stem_jaccard IS NULL").fetchone()
 
-    fulltext_no_repeats_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL FROM ArticleText a, Comments c, Features f WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND f.stem_jaccard IS NULL"
-    for c_id, c_text, a_text, a_url in cursor.execute(fulltext_no_repeats_query):
-
+    initial_togo = cursor.execute("SELECT COUNT(*) FROM Features WHERE first_sentence_jaccard IS NULL").fetchone()[0]
+    #text_name_query = "SELECT c.CommentText, a.Author FROM Comments c, Articles a WHERE c.ArticleURL = a.URL "
+    fulltext_no_repeats_query = "SELECT c.CommentID, c.CommentText, a.FullText, a.URL, u.Author FROM ArticleText a, Comments c, Features f, Articles u WHERE c.ArticleURL=a.URL AND c.CommentID = f.CommentID AND a.URL = u.URL AND author_in_text IS NULL "
+    for c_id, c_text, a_text, a_url, a_name in cursor.execute(fulltext_no_repeats_query):
         c_vec = word_vec(c_text)
         a_vec = word_vec(a_text)
         
         #Compute feature:
-        feat = feat_fxn(c_vec, a_vec, a_url, metadata)
+        num_name = author_name_in_comment(c_vec, a_name)
+        s = get_first_sentence_features(c_text, a_text, a_url)
 
-        insert_statement = ("UPDATE Features SET %s = %f WHERE CommentID = %d" % (feat_name, feat, c_id))
+        insert_statement = ("UPDATE Features SET author_in_text = %f, first_sentence_jaccard = %f, first_sentence_cosine = %f, polarity_dif = %f, subjectivity_dif = %f WHERE CommentID = %d" % (num_name, s[0], s[1], s[2], s[3], c_id))
         set_cursor.execute(insert_statement)
 
         counter += 1
         if counter % 100 == 0:
-            print(".")
+            sys.stdout.write("*")
+            sys.stdout.flush()
             if counter % 1000 == 0:
                 database.commit()
-                print "Have added %d/%d scores" % (counter, count[0])
+                print "\n Have added %d/%d scores" % (counter, initial_togo)
         if counter > cutoffNum: break
 
     set_cursor.close()
@@ -119,8 +84,20 @@ def word_vec(text):
 #Computes the Jaccard similarity between two vectors x and y
 def jaccard_sim(x, y):
     union = float(len(set(x).union(set(y))))
+    if union == 0:
+        return 0
     intersection = len(set(x).intersection(set(y)))
     return intersection/union
+
+#Method: cosine_sim
+def cosine_sim(x, y):
+    dot_product = 0
+    x_dict = Counter(x)
+    y_dict = Counter(y)
+    for key, value in x_dict.items():
+        dot_product += value * y_dict.get(key, 0)
+
+    return dot_product / float(len(x_dict) * len(y_dict) + 1)
 
 ########### Feature functions: ########################################
 
@@ -173,26 +150,53 @@ def stem_jaccard_sim(x, y, a_url, metaD):
 #Method: author_name_in_comment
 #Returns the number of occurrences of the authors (first or last) name in the comment
 #text.
-def author_name_in_comment(c_text, a_name):
-    occurrs = Counter(c_text)
-    num_o = occurrs[a_name] + occurrs[a_name.split()[0]] + occurrs[a_name].split()[-1]]
-    if num_o > 0:
-        print num_o
-        print c_text 
-    return num_o
+def author_name_in_comment(c_vec, a_name):
+    if len(a_name) < 1: return 0
+    a_name = a_name.lower()
+    occurrs = Counter(c_vec)
+    return occurrs[a_name.split()[0]] + occurrs[a_name.split()[-1]]
+
+def grab_first_sentence(text):
+    return re.split(u'[.?!]', text)[0]
+
+#Method: get_first_sentence_features
+def get_first_sentence_features(c_text, a_text, a_url):
+    first_sentence = grab_first_sentence(c_text)
+    first_sentence_vec = word_vec(first_sentence)
+    article = word_vec(a_text)
+    
+    first_sentence_jaccard = jaccard_sim(first_sentence_vec, article)
+    first_sentence_cosine = cosine_sim(first_sentence_vec, article)
+
+    #Note: sentiment analysis on first sentence was fairly useless; comparing
+    #with the whole comment text instead
+    comment_blob = TextBlob(c_text)
+    article_blob = None
+    if a_url in blob_cache:
+        article_blob = blob_cache[a_url]
+    else:
+        article_blob = TextBlob(a_text)
+        blob_cache[a_url] = article_blob
+
+    polarity_dif = abs(comment_blob.sentiment.polarity - article_blob.sentiment.polarity)
+    subjectivity_dif = abs(comment_blob.sentiment.subjectivity - article_blob.sentiment.subjectivity)
+    
+    return first_sentence_jaccard, first_sentence_cosine, polarity_dif, subjectivity_dif
 
 
 
 ######### Main: ####################################################
 
 def main():
-    database = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/jun3.db")
+    database = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/jun5.db")
 
-    add_similarity_metric(database, "stem_jaccard", stem_jaccard_sim)
+    add_similarity_metric(database)
 
+    database.commit()
     database.close()
 
 verbose = True 
+blob_cache = {}
 cutoffNum = float("inf")
 if __name__ == "__main__":
     main()

@@ -47,7 +47,7 @@ def save_full_article(url):
 	comments_db.commit()
 
 #Open database and access cursors:
-comments_db = sqlite3.connect("/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/nyt_comments.db")
+comments_db = sqlite3.connect("comments.db")
 loop_cursor = comments_db.cursor() #Cursor to do update of comments table
 exec_cursor = comments_db.cursor()
 #Run main method:

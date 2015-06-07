@@ -16,6 +16,9 @@ nn_features = "SELECT num_1_letter_words, skipgrams_3, n_sentences, EditorSelect
 baseline = "SELECT c.CommentText, c.CommentID, f.Jaccard, f.EditorSelection FROM Features f, Comments c WHERE c.CommentID = f.CommentID "
 baseline_orig = "SELECT n_chars, n_words, n_periods, n_questions, n_exclamations, n_upper, avg_word_len, n_sentences, avg_sentence_len, words_per_sentence, EditorSelection FROM Features "
 just_jaccard = "SELECT Jaccard, n_chars, EditorSelection From Features"
+baseline_features = "SELECT Jaccard, skipgrams_2, skipgrams_3, Cosine, avg_sentence_len, n_chars, c.CommentID, c.EditorSelection, CommentText FROM Features f, Comments c WHERE c.CommentID = f.CommentID "
+
+
 ##############Initialize features model:
 cf = CommentFeatures("../john_test_5.db")
 
@@ -29,37 +32,34 @@ cf.zeroBlankColumns()
 #cf.preprocessText()
 #cf.setResultsFile("results.csv") ##JOHN-- pulled this out of "classify"
 
-
-#Query the database to make feature vectors/clean data:
 ##############Query the database to make feature vectors/clean data:
 #cf.featureModel()
 cf.featuresAndCommentWordsModel(maxNgram=1)
 #cf.recursiveFeatureElimination()
 #cf.bagOfWordsModel()
 #cf.calcPCA()
-
+#cf.splitClassifierModel(splitOn=200)
 
 ##############Choose classifier: (Choose ONE)
-#cf.setSGD()
+cf.setSGD()
 #cf.setLinearSVM(C_val=.5)
 #cf.setKernelSVM("poly")
 #cf.useCVSearch()
 #cf.setRandomForest()
 #cf.useNeuralNetwork() #Recommend: low # features
+#cf.useTwoClassifiers()
 
 
 ##############Perform the classification step, show metrics:
 cf.useEnsemble()
 #cf.classify()
 #cf.visualize_tsne()
-#Can only use this with a Linear Kernel
 cf.topNCoefficients(1) #Check to see which coefficients are assigned highest classification weight
 
 #cf.viewMisclassifiedReviews(article_url="http://www.nytimes.com/2013/04/18/us/politics/senate-obama-gun-control.html")
-#cf.viewYesClassifiedReviews(article_url="http://www.nytimes.com/2013/04/18/us/politics/senate-obama-gun-control.html")
 
-#cf.viewMisclassifiedReviews(article_url="http://www.nytimes.com/2015/04/08/us/south-carolina-officer-is-charged-with-murder-in-black-mans-death.html")
-#cf.viewYesClassifiedReviews(article_url="http://www.nytimes.com/2015/04/08/us/south-carolina-officer-is-charged-with-murder-in-black-mans-death.html")
+#cf.classifyOnSplit()
+#cf.classifyKValidation(k=3, verbose=True)
 
 ##############Close up the database, cursors, etc
 cf.close()
