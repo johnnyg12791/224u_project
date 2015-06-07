@@ -37,6 +37,8 @@ class CommentFeatures():
 		#Queries to return all of training or dev data, respectively. Customize if you need other columns
 		self.selectStatement = "SELECT CommentID, CommentText, EditorSelection FROM Comments c WHERE CommentText IS NOT NULL "
 		self.trainCutoffNum = float("inf")
+		self.devCutoffNum = float("inf")
+
 		self.zeroBlanks = False #A parameter to set all null cells in table to 0
 		self.preprocessText = False
 
@@ -65,6 +67,7 @@ class CommentFeatures():
 
 		self.BOWvectorizer = None #A standin for "using bag of words"
 		self.save_file="afs"
+		self.save_file="results.csv"
 
 	def close(self):
 		self.c.close()
@@ -83,8 +86,9 @@ class CommentFeatures():
 
 	#Method: limitNumComments
 	#Limit number of reviews for debugging/classification purposes
-	def limitNumComments(self, upperLimit):
+	def limitNumComments(self, upperLimit, devUpperLimit):
 		self.trainCutoffNum = upperLimit
+		self.devCutoffNum = devUpperLimit
 
 	#Method: setVerbose
 	#Set verbosity to "on"; note that right now this is 80% debugging output
@@ -173,14 +177,14 @@ class CommentFeatures():
 			d_x.append(cText)
 			self.d_y.append(gold)
 			if returnCommentIDs: d_commentIDs.append(cID)
-			if num_grabbed > self.trainCutoffNum * self.proportionEditorPicksDev: break
+			if num_grabbed > self.devCutoffNum * self.proportionEditorPicksDev: break
 		#Add 75% non-editor picks
 		for cID, cText, gold in self.c.execute (self.devSelectQueryNonEditorPick):
 			d_x.append(cText)
 			self.d_y.append(gold)
 			if returnCommentIDs: d_commentIDs.append(cID)
 			num_grabbed +=1
-			if num_grabbed > self.trainCutoffNum: break
+			if num_grabbed > self.devCutoffNum: break
 
 		#Return comment IDs; useful when we want to vectorize this dict separately
 		return t_commentIDs, d_commentIDs
@@ -298,7 +302,7 @@ class CommentFeatures():
 
 		#Dev, editor
 		dev_editorX, Y, bX, ids = self.makeFeatureDict(
-			self.devSelectQueryEditorPick, self.trainCutoffNum * self.proportionEditorPicksDev)
+			self.devSelectQueryEditorPick, self.devCutoffNum * self.proportionEditorPicksDev)
 		self.d_x.extend(dev_editorX)
 		self.d_y.extend(Y)
 		d_bow_X.extend(bX)
@@ -310,7 +314,7 @@ class CommentFeatures():
 
 		#Dev, non-editor
 		dev_noneditorX, Y, bX, ids = self.makeFeatureDict(
-			self.devSelectQueryNonEditorPick, self.trainCutoffNum * (1-self.proportionEditorPicksDev))
+			self.devSelectQueryNonEditorPick, self.devCutoffNum * (1-self.proportionEditorPicksDev))
 		self.d_x.extend(dev_noneditorX)
 		self.d_y.extend(Y)
 		d_bow_X.extend(bX)
@@ -459,6 +463,7 @@ class CommentFeatures():
 
 ###########Set classifier type + parameters: ############################
 
+
 	#Method: setLinearSVM
 	#Sets classifier to be very basic linear SVM
 	def setLinearSVM(self, C_val=.1):
@@ -518,6 +523,58 @@ class CommentFeatures():
 
 
 ###########Classification step: ##########################################
+
+	def useEnsemble(self):
+		print "Starting Ensemble"
+
+		print "Classifying with LinearSVM"
+		self.classifier = svm.LinearSVC(C=.5, dual=False)#, class_weight="auto")
+		self.classifier.fit(self.t_x, self.t_y)
+		predict_train_1 = self.classifier.predict(self.t_x)
+		predict_dev_1 = self.classifier.predict(self.d_x)
+
+		print "Classifying with a Random Forest"
+		#self.classifier = svm.SVC(C=.5)
+		self.classifier = RandomForestClassifier()
+		self.classifier.fit(self.t_x, self.t_y)
+		predict_train_2 = self.classifier.predict(self.t_x)
+		predict_dev_2 = self.classifier.predict(self.d_x)
+
+		print "Classifying with SGD"
+		self.classifier = linear_model.SGDClassifier(loss="log")
+		#self.classifier = RandomForestClassifier()
+		self.classifier.fit(self.t_x, self.t_y)
+		predict_train_3 = self.classifier.predict(self.t_x)
+		predict_dev_3 = self.classifier.predict(self.d_x)
+
+		print "Creating Ensemble"
+		#Dividing by 2 has the effect of selecting the majority
+		train_sum_predict = predict_train_1 + predict_train_2 + predict_train_3
+		dev_sum_predict = predict_dev_1 + predict_dev_2 + predict_dev_3
+
+		print "number of positives predicted when dividing by 2 = ", np.sum(dev_sum_predict / 2)
+		print "number of positives predicted when dividing by 3 = ", np.sum(dev_sum_predict / 3)
+
+		predict_train = train_sum_predict / 2
+		predict_dev = dev_sum_predict / 2
+
+
+		print "Classified %d samples, using %d features" % self.t_x.shape
+		print "Training accuracy:"
+		t_acc = self.f1_accuracy(predict_train, self.t_y)
+		self.p_r_f_s(self.t_y, predict_train)
+		
+		print "Classification report:"
+		self.classification_report(predict_train, self.t_y)
+		print "Dev accuracy:"
+		d_acc = self.f1_accuracy(predict_dev, self.d_y)
+		self.p_r_f_s(self.d_y, predict_dev)
+		
+		print "Classification report:"
+		self.classification_report(predict_dev, self.d_y)
+
+		#Save results to CSV
+		self.save_results(t_acc, d_acc, ensemble=True)
 
 	#Method: classify
 	#Run the classifier specified under self.classifier on the train and
@@ -603,13 +660,15 @@ class CommentFeatures():
 		plt.scatter(tsne_x[:, 0], tsne_x[:, 1], c=colors)
 		plt.show()
 
-	def save_results(self, train, dev):
+	def save_results(self, train, dev, ensemble=False):
 		if self.save_file == "afs":
 			self.save_file = "/afs/ir.stanford.edu/users/l/m/lmhunter/CS224U/224u_project/results.csv"
 		with open(self.save_file, 'a') as results_file:
 			num_total = self.trainCutoffNum
 			num_1s = num_total * self.proportionEditorPicksTrain
 
+			if ensemble :
+				results_file.write("**Results from Ensemble Model**\n")
 			results_file.write(time.strftime("%Y-%m-%d %H:%M") + "\n")
 			results_file.write("Number of 1s : " + str(num_1s) + " out of " + str(num_total) + "\n")
 			results_file.write("---------------------\n")
@@ -623,37 +682,74 @@ class CommentFeatures():
 
 	#Method: viewMisclassifiedReviews
 	#A method that will print out reviews that were misclassified.
-	def viewMisclassifiedReviews(self, numToShow=10, allFromDev=True, showFalseNegs=True, showFalsePos=True):
+	def viewMisclassifiedReviews(self, numToShow=10, allFromDev=True, showFalseNegs=True, showFalsePos=True, article_url=None):
 		#View mislcassified reviews:
 		predictions_dev = self.classifier.predict(self.d_x)
 		false_pos = 0
 		false_neg = 0
+		if article_url != None :
+			print "The Article URL is: ", article_url
+			ids_by_article = self.c.execute("SELECT CommentID FROM Comments WHERE ArticleURL = ?", (article_url,)).fetchall()
+			ids_by_article = [ids[0] for ids in ids_by_article]
+		else :
+			ids_by_article = [x for x in range(5e7, 1e8)]
 		for i in range(len(predictions_dev)):
 			prediction = predictions_dev[i]
 			gold = self.d_y[i]
-			#If prediction != gold, review was misclassified:
-			editorPickOrNah = ["Naaht an editor pick", "editor pick"]
-			if showFalseNegs and false_neg < numToShow:
-				if prediction != gold and prediction == 1:
-					c_id = self.d_IDs[i]
-					print "Comment %d misclassified as %s:" %(c_id, editorPickOrNah[prediction])
-					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ? ORDER BY RANDOM()", (c_id,)).fetchone()
+			c_id = self.d_IDs[i]
+			if showFalseNegs and false_neg < numToShow and c_id in ids_by_article:
+				if prediction == 1 and gold == 0 :
+					print "Comment %d misclassified. False Positive" % (c_id)
+					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ?", (c_id,)).fetchone()
 					print text
 					print "\n"
 					false_neg += 1
-			if showFalsePos and false_pos < numToShow:
-				if prediction != gold and prediction == 0:
-					c_id = self.d_IDs[i]
-					print "Comment %d misclassified as %s:" %(c_id, editorPickOrNah[prediction])
-					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ? ORDER BY RANDOM()", (c_id,)).fetchone()
+			if showFalsePos and false_pos < numToShow  and c_id in ids_by_article:
+				if prediction == 0 and gold == 1:
+					print "Comment %d misclassified . False Negative" % (c_id)
+					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ?", (c_id,)).fetchone()
 					print text
 					print "\n"
 					false_pos += 1
 			if false_neg + false_pos > 2 * numToShow: break
+		print "Number of False Positives: ", false_pos
+		print "Number of False Negatives: ", false_neg
 
 
 
-
+	def viewYesClassifiedReviews(self, numToShow=10, allFromDev=True, showTrueNegs=True, showTruePos=True, article_url=None):
+		#View mislcassified reviews:
+		predictions_dev = self.classifier.predict(self.d_x)
+		true_pos = 0
+		true_neg = 0
+		if article_url != None :
+			print "The Article URL is: ", article_url
+			ids_by_article = self.c.execute("SELECT CommentID FROM Comments WHERE ArticleURL = ?", (article_url,)).fetchall()
+			ids_by_article = [ids[0] for ids in ids_by_article]
+		else :
+			ids_by_article = [x for x in range(5e7, 1e8)]
+		for i in range(len(predictions_dev)):
+			prediction = predictions_dev[i]
+			gold = self.d_y[i]
+			c_id = self.d_IDs[i]
+			if showTrueNegs and true_neg < numToShow and c_id in ids_by_article:
+				if prediction == 0 and prediction == 0:
+					print "Comment %d classified correctly: True Negative" % (c_id)
+					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ?", (c_id,)).fetchone()
+					print text
+					print "\n"
+					true_neg += 1
+			if showTruePos and true_pos < numToShow and c_id in ids_by_article:
+				if prediction == 1 and prediction == 1:
+					c_id = self.d_IDs[i]
+					print "Comment %d classified correctly: True Positive" % (c_id)
+					text = self.c.execute("SELECT CommentText FROM Comments WHERE CommentID = ?", (c_id,)).fetchone()
+					print text
+					print "\n"
+					true_pos += 1
+			if true_neg + true_pos > 2 * numToShow: break
+		print "Number of True Positives: ", true_pos
+		print "Number of True Negatives: ", true_neg
 
 
 

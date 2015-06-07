@@ -873,3 +873,794 @@ Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
      random_state=None, tol=0.0001, verbose=0)
 >>>>>>> f8471c89672ab33345a6c74e9cf13ee0cbcf7b48
 
+2015-05-31 16:25
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.0  | 0.0 |
+---------------------
+Features = avg_sentence_len,avg_word_len,n_chars,n_periods,n_questions,n_upper,n_words,words_per_sentence
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-05-31 16:26
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.0  | 0.0 |
+---------------------
+Features = avg_sentence_len,avg_word_len,n_chars,n_periods,n_questions,n_upper,n_words,words_per_sentence
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-05-31 16:26
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.06085  | 0.05385 |
+---------------------
+Features = avg_sentence_len,avg_word_len,n_chars,n_periods,n_questions,n_upper,n_words,words_per_sentence
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-05-31 16:28
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.00247  | 0.00204 |
+---------------------
+Features = avg_sentence_len,avg_word_len,n_chars,n_periods,n_questions,n_upper,n_words,words_per_sentence
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-05-31 16:29
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.64215  | 0.46021 |
+---------------------
+Features = Jaccard,avg_sentence_len,avg_word_len,n_chars,n_periods,n_questions,n_upper,n_words,words_per_sentence
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-05-31 16:32
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.0  | 0.0 |
+---------------------
+Features = Jaccard,avg_sentence_len,avg_word_len,n_chars,n_periods,n_questions,n_upper,n_words,words_per_sentence
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-05-31 16:42
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.99428  | 0.52581 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-05-31 16:48
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.99428  | 0.52581 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-03 18:15
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.99428  | 0.52581 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-03 18:26
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.99428  | 0.52581 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-03 18:30
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.99428  | 0.52581 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-03 20:10
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.99428  | 0.52581 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-03 20:22
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.82638  | 0.52429 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+2015-06-03 20:28
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.82661  | 0.52416 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+2015-06-03 20:31
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.82587  | 0.52426 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+2015-06-03 20:43
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.82708  | 0.52496 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+2015-06-03 20:51
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.8281  | 0.525 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+2015-06-03 20:55
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.82556  | 0.52501 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+2015-06-03 21:05
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.82584  | 0.52455 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+2015-06-03 21:09
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.99428  | 0.52581 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-03 21:34
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.99428  | 0.52581 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-03 21:41
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.99428  | 0.52581 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-04 15:36
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.99428  | 0.52581 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-04 15:42
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.4158  | 0.34314 |
+---------------------
+Features = Agree,CC,CD,Conservative,Cosine,DT,Democrat,Disagree,EX,Europe,FW,God,JJ,JJR,JJS,Jaccard,LS,Liberal,MD,NN,NNP,NNPS,NNS,Obama,PDT,POS,PRP,PRP$,Palestine,PhD,RB,RBR,RBS,RP,Republican,UH,VB,VBD,VBG,VBN,VBP,VBZ,WDT,WP,WP$,WRB,avg_sentence_len,avg_word_len,n_10_char_words,n_11_char_words,n_11_to_15_char_words,n_12_char_words,n_13_char_words,n_14_char_words,n_15_char_words,n_16_char_words,n_16_to_20_char_words,n_17_char_words,n_18_char_words,n_19_char_words,n_1_char_words,n_1_to_5_char_words,n_20_char_words,n_2_char_words,n_3_char_words,n_4_char_words,n_5_char_words,n_6_char_words,n_6_to_10_char_words,n_7_char_words,n_8_char_words,n_9_char_words,n_chars,n_exclamations,n_novel_tags,n_periods,n_questions,n_sentences,n_upper,n_words,perc_10_char_words,perc_11_char_words,perc_12_char_words,perc_13_char_words,perc_14_char_words,perc_15_char_words,perc_16_char_words,perc_17_char_words,perc_18_char_words,perc_19_char_words,perc_1_char_words,perc_20_char_words,perc_2_char_words,perc_3_char_words,perc_4_char_words,perc_5_char_words,perc_6_char_words,perc_7_char_words,perc_8_char_words,perc_9_char_words,polarity,president,size_compared_to_article,starts_with_I,subjectivity,words_per_sentence
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-04 15:46
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.99426  | 0.23562 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-04 15:59
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.99426  | 0.23562 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-04 16:04
+Number of 1s : 75000.0 out of 150000
+---------------------
+| f1_train | f1_dev  |
+| 0.0  | 0.0 |
+---------------------
+Features = avg_sentence_len,avg_word_len,n_chars,n_exclamations,n_periods,n_questions,n_sentences,n_upper,n_words,words_per_sentence
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+2015-06-04 16:08
+Number of 1s : 75000.0 out of 150000
+---------------------
+| f1_train | f1_dev  |
+| 0.4922  | 0.14234 |
+---------------------
+Features = avg_sentence_len,avg_word_len,n_chars,n_exclamations,n_periods,n_questions,n_sentences,n_upper,n_words,words_per_sentence
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+2015-06-04 16:09
+Number of 1s : 75000.0 out of 150000
+---------------------
+| f1_train | f1_dev  |
+| 0.17198  | 0.13794 |
+---------------------
+Features = avg_sentence_len,avg_word_len,n_chars,n_exclamations,n_periods,n_questions,n_sentences,n_upper,n_words,words_per_sentence
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+2015-06-04 16:09
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 8e-05  | 0.0 |
+---------------------
+Features = avg_sentence_len,avg_word_len,n_chars,n_exclamations,n_periods,n_questions,n_sentences,n_upper,n_words,words_per_sentence
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+2015-06-04 16:09
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.55479  | 0.3916 |
+---------------------
+Features = avg_sentence_len,avg_word_len,n_chars,n_exclamations,n_periods,n_questions,n_sentences,n_upper,n_words,words_per_sentence
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+2015-06-04 16:12
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.67927  | 0.45245 |
+---------------------
+Features = avg_sentence_len,avg_word_len,n_chars,n_exclamations,n_periods,n_questions,n_sentences,n_upper,n_words,words_per_sentence
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-04 16:17
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.5753  | 0.4193 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-04 16:22
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.99428  | 0.52581 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-04 16:37
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.99428  | 0.52581 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-04 17:14
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.89311  | 0.53271 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-04 17:36
+Number of 1s : 1000.0 out of 10000
+---------------------
+| f1_train | f1_dev  |
+| 0.89879  | 0.02834 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-04 17:37
+Number of 1s : 5000.0 out of 10000
+---------------------
+| f1_train | f1_dev  |
+| 0.9638  | 0.66481 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+2015-06-04 17:39
+Number of 1s : 5000.0 out of 10000
+---------------------
+| f1_train | f1_dev  |
+| 0.96591  | 0.66796 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+2015-06-04 17:41
+Number of 1s : 15000.0 out of 30000
+---------------------
+| f1_train | f1_dev  |
+| 0.92162  | 0.59823 |
+---------------------
+Features = Jaccard
+Classifier = LinearSVC(C=0.5, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+     multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+     verbose=0)
+
+**Results from Ensemble Model**
+2015-06-05 13:02
+Number of 1s : 5000.0 out of 10000
+---------------------
+| f1_train | f1_dev  |
+| 0.68011  | 0.46482 |
+---------------------
+Features = Jaccard,n_chars
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-05 13:03
+Number of 1s : 5000.0 out of 10000
+---------------------
+| f1_train | f1_dev  |
+| 0.67787  | 0.46204 |
+---------------------
+Features = Jaccard,n_chars
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-05 13:03
+Number of 1s : 15000.0 out of 30000
+---------------------
+| f1_train | f1_dev  |
+| 0.0  | 0.0 |
+---------------------
+Features = Jaccard,n_chars
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-05 13:06
+Number of 1s : 15000.0 out of 30000
+---------------------
+| f1_train | f1_dev  |
+| 0.72583  | 0.40145 |
+---------------------
+Features = Jaccard,avg_word_len,n_questions,n_sentences
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-05 13:08
+Number of 1s : 15000.0 out of 30000
+---------------------
+| f1_train | f1_dev  |
+| 0.7268  | 0.4061 |
+---------------------
+Features = Jaccard,avg_word_len,n_questions,n_sentences
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-05 13:11
+Number of 1s : 15000.0 out of 30000
+---------------------
+| f1_train | f1_dev  |
+| 0.00027  | 0.0 |
+---------------------
+Features = Jaccard,avg_word_len,n_questions,n_sentences
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-05 13:18
+Number of 1s : 15000.0 out of 30000
+---------------------
+| f1_train | f1_dev  |
+| 0.88049  | 0.54012 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-05 13:21
+Number of 1s : 15000.0 out of 30000
+---------------------
+| f1_train | f1_dev  |
+| 0.92472  | 0.61248 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-05 13:26
+Number of 1s : 15000.0 out of 30000
+---------------------
+| f1_train | f1_dev  |
+| 0.87441  | 0.52652 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 16:03
+Number of 1s : 15000.0 out of 30000
+---------------------
+| f1_train | f1_dev  |
+| 0.88105  | 0.53333 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 16:11
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.86283  | 0.48316 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 16:16
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.86869  | 0.48158 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 16:22
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.87081  | 0.47916 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 16:28
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.85813  | 0.3092 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 16:34
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.85891  | 0.48127 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 18:17
+Number of 1s : 8000.0 out of 16000
+---------------------
+| f1_train | f1_dev  |
+| 0.90299  | 0.58847 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 18:19
+Number of 1s : 8000.0 out of 16000
+---------------------
+| f1_train | f1_dev  |
+| 0.94644  | 0.68705 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 18:28
+Number of 1s : 25000.0 out of 50000
+---------------------
+| f1_train | f1_dev  |
+| 0.90596  | 0.7437 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 18:35
+Number of 1s : 75000.0 out of 150000
+---------------------
+| f1_train | f1_dev  |
+| 0.74651  | 0.39008 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 18:41
+Number of 1s : 75000.0 out of 150000
+---------------------
+| f1_train | f1_dev  |
+| 0.74618  | 0.38865 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
+**Results from Ensemble Model**
+2015-06-06 18:45
+Number of 1s : 30000.0 out of 60000
+---------------------
+| f1_train | f1_dev  |
+| 0.89876  | 0.74834 |
+---------------------
+Features = Jaccard
+Classifier = SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False)
+
